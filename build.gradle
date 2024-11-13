@@ -26,13 +26,27 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+    // Selenium
+    implementation 'org.seleniumhq.selenium:selenium-java:4.4.0'
+
+    // Jsoup
+    implementation 'org.jsoup:jsoup:1.15.3'
+
+    // Spring Boot Starter Web (필요 시 추가)
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Test dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
 }
 
 tasks.named('test') {

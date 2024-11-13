@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header th:fragment="header" class="header">
+    <div class="header-container">
+        <div class="header-left">
+            <h1><a href="/demo/list" class="logo">로고</a></h1>
+            <nav>
+                <ul class="menu">
+                    <li><a href="/demo/list">채용공고</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="header-center">
+            <form th:action="@{/search}" method="get">
+                <input type="text" name="query" placeholder="직무, 회사, 지역, 키워드로 검색해보세요" class="search-input">
+                <button type="submit" class="search-btn">검색</button>
+            </form>
+        </div>
+        <div class="header-right">
+            <a href="/demo/signin" class="login-btn">로그인</a>
+            <a href="/demo/signup" class="signup-btn">회원가입</a>
+        </div>
+    </div>
+</header>
+</body>
+</html>

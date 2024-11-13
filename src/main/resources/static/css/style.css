@@ -1,0 +1,200 @@
+/* 헤더 스타일 */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+}
+
+.header-left h1 a.logo {
+    font-size: 24px;
+    text-decoration: none;
+    color: #333;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu li {
+    display: inline;
+    margin-left: 15px;
+}
+
+.menu li a {
+    text-decoration: none;
+    color: #333;
+}
+
+.header-right a {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+/* 리스트 스타일 */
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h2 {
+    font-size: 18px;
+    color: #555;
+}
+
+.job-list {
+    margin-top: 20px;
+}
+
+.job-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.job-info {
+    max-width: 70%;
+}
+
+.job-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.company-name, .job-location, .closing-date {
+    font-size: 14px;
+    color: #888;
+    margin: 3px 0;
+}
+
+.apply-button .btn-apply {
+    display: inline-block;
+    padding: 8px 16px;
+    color: white;
+    background-color: #ff4500;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+/* 고정 헤더 스타일 */
+.header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #ffffff;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+.header-center {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-input {
+    width: 400px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+}
+
+.search-btn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.page-link {
+    padding: 8px 12px;
+    margin: 0 5px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.page-link.current-page {
+    font-weight: bold;
+    background-color: #007bff;
+    color: white;
+}
+
+.page-link:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* 헤더 여백 */
+.filter-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.filter-options, .sorting-options, .search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.filter-button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    background-color: #e0e0e0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.search-bar {
+    display: flex;
+}
+
+.search-input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+}
+
+.search-btn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
