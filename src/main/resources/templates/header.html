@@ -16,14 +16,21 @@
             </nav>
         </div>
         <div class="header-center">
-            <form th:action="@{/search}" method="get">
+            <form th:action="@{/demo/list}" method="get">
                 <input type="text" name="query" placeholder="직무, 회사, 지역, 키워드로 검색해보세요" class="search-input">
                 <button type="submit" class="search-btn">검색</button>
             </form>
         </div>
         <div class="header-right">
-            <a href="/demo/signin" class="login-btn">로그인</a>
-            <a href="/demo/signup" class="signup-btn">회원가입</a>
+            <!-- Check if user is logged in -->
+            <div th:if="${sessionMember != null}">
+                <span>Hello, <span th:text="${sessionMember.name}">User</span></span>
+                <a href="/demo/logout" class="logout-btn">로그아웃</a>
+            </div>
+            <div th:unless="${sessionMember != null}">
+                <a href="/demo/signin" class="login-btn">로그인</a>
+                <a href="/demo/signup" class="signup-btn">회원가입</a>
+            </div>
         </div>
     </div>
 </header>

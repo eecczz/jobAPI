@@ -4,20 +4,17 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Entity
 @Getter
 @Setter
-@Entity
-public class JobPosting {
+public class AppList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
-    private String company;
-    private String location;
-    private String closingDate;
-    private String url;
+    @ManyToOne
+    private Member member;
 
     @ManyToOne
-    private Member author; // 작성자 정보 추가
+    private JobPosting jobPosting;
 }

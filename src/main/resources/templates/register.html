@@ -1,29 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-
-<th:block th:replace="~{/layout/basic :: setContent(~{this::content} )}">
-
-    <th:block th:fragment="content">
-
-        <h1 class="mt-4">GuestBook Register Page</h1>
-
-        <form th:action="@{/guestbook/register}" th:method="post">
-            <div class="form-group">
-                <label >Title</label>
-                <input type="text" class="form-control" name="title" placeholder="Enter Title">
-            </div>
-            <div class="form-group">
-                <label >Content</label>
-                <textarea class="form-control" rows="5" name="content"></textarea>
-            </div>
-            <div class="form-group">
-                <label >Writer</label>
-                <input type="text" class="form-control" name="writer" placeholder="Enter Writer">
-            </div>
-
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-
-    </th:block>
-
-</th:block>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Job Posting</title>
+</head>
+<body>
+<h1>채용공고 등록</h1>
+<form th:action="@{/demo/register}" th:object="${jobPosting}" method="post">
+    <label>제목:</label><input type="text" th:field="*{title}" /><br />
+    <label>회사명:</label><input type="text" th:field="*{company}" /><br />
+    <label>위치:</label><input type="text" th:field="*{location}" /><br />
+    <label>마감일:</label><input type="text" th:field="*{closingDate}" /><br />
+    <label>URL:</label><input type="text" th:field="*{url}" /><br />
+    <button type="submit">등록</button>
+</form>
+</body>
+</html>

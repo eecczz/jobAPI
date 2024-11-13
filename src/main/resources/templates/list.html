@@ -29,7 +29,7 @@
 
         <label for="sortOrder">정렬 기준:</label>
         <select id="sortOrder" name="sortOrder">
-            <option value="recommend">추천순</option>
+            <option value="recommend">관심등록순</option>
             <option value="latest">최신순</option>
             <option value="close">마감순</option>
         </select>
@@ -50,13 +50,18 @@
     <div class="job-list">
         <div th:each="jobPosting : ${jobPostings}" class="job-item">
             <div class="job-info">
-                <h3 class="job-title" th:text="${jobPosting.title}">채용 제목</h3>
+                <a th:href="@{/demo/read/{id}(id=${jobPosting.id})}" th:text="${jobPosting.title}">채용 제목</a>
                 <p class="company-name" th:text="${jobPosting.company}">회사 이름</p>
                 <p class="job-location" th:text="${jobPosting.location}">지역</p>
                 <p class="closing-date" th:text="${jobPosting.closingDate}">D-4</p>
             </div>
             <div class="apply-button">
-                <a th:href="${jobPosting.url}" target="_blank" class="btn-apply">입사지원</a>
+                <form th:action="@{/demo/apply/{id}(id=${jobPosting.id})}" method="post" style="display:inline;">
+                    <button target="_blank" class="btn-apply">입사지원</button>
+                </form>
+                <form th:action="@{/demo/save/{id}(id=${jobPosting.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn-save">관심등록</button>
+                </form>
             </div>
         </div>
     </div>
@@ -78,6 +83,8 @@
             </li>
         </ul>
     </nav>
+    <!-- Footer with fixed button -->
+    <div th:replace="footer :: footer"></div>
 </div>
 </body>
 <script
