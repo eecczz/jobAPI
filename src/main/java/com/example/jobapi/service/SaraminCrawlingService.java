@@ -1,4 +1,4 @@
-package com.example.jobapi.Service;
+package com.example.jobapi.service;
 
 import com.example.jobapi.entity.JobPosting;
 import com.example.jobapi.repository.JobPostingRepository;

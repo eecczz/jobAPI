@@ -13,6 +13,7 @@ public class JobPosting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "POSTING_ID")
     private Long id;
     private String title;
     private String company;
