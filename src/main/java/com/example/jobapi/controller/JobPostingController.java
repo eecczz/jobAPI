@@ -77,7 +77,7 @@ public class JobPostingController {
         Member loginMember = getLoginMember(session);
         model.addAttribute("jobPosting", jobPosting);
 
-        boolean canEdit = loginMember != null && jobPosting.getAuthor().getId().equals(loginMember.getId());
+        boolean canEdit = loginMember != null && jobPosting.getAuthor() != null && jobPosting.getAuthor().getId().equals(loginMember.getId());
         model.addAttribute("canEdit", canEdit);
 
         return "read";

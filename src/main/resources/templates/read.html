@@ -11,7 +11,6 @@
     <p><strong>회사명:</strong> <span th:text="${jobPosting.company}"></span></p>
     <p><strong>위치:</strong> <span th:text="${jobPosting.location}"></span></p>
     <p><strong>마감일:</strong> <span th:text="${jobPosting.closingDate}"></span></p>
-    <p><strong>URL:</strong> <a th:href="${jobPosting.url}" target="_blank">지원하기</a></p>
     <a th:if="${canEdit}" th:href="@{/demo/modify/{id}(id=${jobPosting.id})}" class="btn-edit">수정</a>
 </div>
 </body>
