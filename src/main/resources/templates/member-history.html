@@ -2,39 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Member Information</title>
+    <title>Member History</title>
 </head>
 <body>
-<h1>정보조회</h1>
+<h1>회원 활동 내역</h1>
 
-<h2>관심 등록한 채용공고</h2>
-<div th:if="${savedJobs.empty}">
-    <p>관심 등록한 채용공고가 없습니다.</p>
-</div>
-<ul th:each="saved : ${savedJobs}">
-    <li>
-        <a th:href="@{/demo/read/{id}(id=${saved.jobPosting.id})}" th:text="${saved.jobPosting.title}"></a>
-        <span th:text="'회사명: ' + ${saved.jobPosting.company}"></span>
-    </li>
-</ul>
+<h2>관심 목록</h2>
+<table>
+    <tr>
+        <th>채용 공고 제목</th>
+        <th>취소</th>
+    </tr>
+    <tr th:each="item : ${saveList}">
+        <td th:text="${item.jobPosting.title}">Job Title</td>
+        <td>
+            <form th:action="@{/demo/cancel-save/{id}(id=${item.id})}" method="post">
+                <button type="submit">취소</button>
+            </form>
+        </td>
+    </tr>
+</table>
 
-<h2>입사지원한 채용공고</h2>
-<div th:if="${appliedJobs.empty}">
-    <p>입사지원한 채용공고가 없습니다.</p>
-</div>
-<ul th:each="app : ${appliedJobs}">
-    <li>
-        <a th:href="@{/demo/read/{id}(id=${app.jobPosting.id})}" th:text="${app.jobPosting.title}"></a>
-        <span th:text="'회사명: ' + ${app.jobPosting.company}"></span>
-    </li>
-</ul>
+<h2>지원 목록</h2>
+<table>
+    <tr>
+        <th>채용 공고 제목</th>
+        <th>취소</th>
+    </tr>
+    <tr th:each="item : ${appList}">
+        <td th:text="${item.jobPosting.title}">Job Title</td>
+        <td>
+            <form th:action="@{/demo/cancel-apply/{id}(id=${item.id})}" method="post">
+                <button type="submit">취소</button>
+            </form>
+        </td>
+    </tr>
+</table>
 
-<!-- Delete Account Button -->
-<div>
-    <form th:action="@{/demo/delete-account}" method="post">
-        <button type="submit" class="btn-delete-account">회원탈퇴</button>
-    </form>
-</div>
+<form th:action="@{/demo/delete-member}" method="post">
+    <button type="submit">회원탈퇴</button>
+</form>
+
+<a th:href="@{/demo/member-modify}">회원 정보 수정</a>
 
 </body>
 </html>
