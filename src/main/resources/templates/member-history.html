@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Member Information</title>
+</head>
+<body>
+<h1>정보조회</h1>
+
+<h2>관심 등록한 채용공고</h2>
+<div th:if="${savedJobs.empty}">
+    <p>관심 등록한 채용공고가 없습니다.</p>
+</div>
+<ul th:each="saved : ${savedJobs}">
+    <li>
+        <a th:href="@{/demo/read/{id}(id=${saved.jobPosting.id})}" th:text="${saved.jobPosting.title}"></a>
+        <span th:text="'회사명: ' + ${saved.jobPosting.company}"></span>
+    </li>
+</ul>
+
+<h2>입사지원한 채용공고</h2>
+<div th:if="${appliedJobs.empty}">
+    <p>입사지원한 채용공고가 없습니다.</p>
+</div>
+<ul th:each="app : ${appliedJobs}">
+    <li>
+        <a th:href="@{/demo/read/{id}(id=${app.jobPosting.id})}" th:text="${app.jobPosting.title}"></a>
+        <span th:text="'회사명: ' + ${app.jobPosting.company}"></span>
+    </li>
+</ul>
+
+<!-- Delete Account Button -->
+<div>
+    <form th:action="@{/demo/delete-account}" method="post">
+        <button type="submit" class="btn-delete-account">회원탈퇴</button>
+    </form>
+</div>
+
+</body>
+</html>

@@ -17,20 +17,20 @@
         </div>
         <div class="header-center">
             <form th:action="@{/demo/list}" method="get">
-                <input type="text" name="query" placeholder="직무, 회사, 지역, 키워드로 검색해보세요" class="search-input">
+                <input type="text" name="keyword" placeholder="직무, 회사, 지역, 키워드로 검색해보세요" class="search-input">
                 <button type="submit" class="search-btn">검색</button>
             </form>
         </div>
         <div class="header-right">
-            <!-- Check if user is logged in -->
-            <div th:if="${sessionMember != null}">
-                <span>Hello, <span th:text="${sessionMember.name}">User</span></span>
+            <span th:if="${sessionMember != null}">
+                Hello, <span th:text="${sessionMember.name}"></span> |
+                <a href="/demo/member-history" class="member-info-btn">정보조회</a> |
                 <a href="/demo/logout" class="logout-btn">로그아웃</a>
-            </div>
-            <div th:unless="${sessionMember != null}">
+            </span>
+            <span th:if="${sessionMember == null}">
                 <a href="/demo/signin" class="login-btn">로그인</a>
                 <a href="/demo/signup" class="signup-btn">회원가입</a>
-            </div>
+            </span>
         </div>
     </div>
 </header>
