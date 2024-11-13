@@ -35,18 +35,20 @@
         </select>
     </div>
 
-    <div class="search-bar">
-        <input type="text" placeholder="검색어 입력" class="search-input">
-        <button class="search-btn">검색</button>
-    </div>
+    <form class="mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search for products..." aria-label="Search for products" aria-describedby="button-search">
+            <button class="btn btn-outline-dark" type="button" id="button-search">Search</button>
+        </div>
+    </form>
 </div>
 
 <!-- 게시판 -->
 <div class="container">
-    <h2>전체 채용정보 <span th:text="${jobPostingsPage.totalElements} + '건'">561건</span></h2>
+    <h2>전체 채용정보 <span th:text="${jobPostings.totalElements} + '건'"></span></h2>
 
     <div class="job-list">
-        <div th:each="jobPosting : ${jobPostingsPage.content}" class="job-item">
+        <div th:each="jobPosting : ${jobPostings}" class="job-item">
             <div class="job-info">
                 <h3 class="job-title" th:text="${jobPosting.title}">채용 제목</h3>
                 <p class="company-name" th:text="${jobPosting.company}">회사 이름</p>
@@ -60,14 +62,41 @@
     </div>
 
     <!-- 페이지네이션 -->
-    <div class="pagination">
-        <a th:if="${currentPage > 1}" th:href="@{/demo/list(page=${currentPage - 1})}" class="page-link">이전</a>
-        <span th:each="i : ${#numbers.sequence(1, totalPages)}">
-                <a th:if="${i == currentPage}" class="page-link current-page" th:text="${i}"></a>
-                <a th:if="${i != currentPage}" th:href="@{/demo/list(page=${i})}" class="page-link" th:text="${i}"></a>
-            </span>
-        <a th:if="${currentPage < totalPages}" th:href="@{/demo/list(page=${currentPage + 1})}" class="page-link">다음</a>
-    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            <!-- Previous Button -->
+            <li class="page-item" th:classappend="${pagenum == 0} ? 'disabled'">
+                <a class="page-link" href="#" th:data-page="${pagenum - 1}" tabindex="-1">Previous</a>
+            </li>
+            <!-- Page Numbers -->
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, jobPostings.totalPages - 1)}" th:classappend="${i == pagenum} ? 'active'">
+                <a class="page-link" href="#" th:text="${i + 1}" th:data-page="${i}"></a>
+            </li>
+            <!-- Next Button -->
+            <li class="page-item" th:classappend="${pagenum == jobPostings.totalPages - 1} ? 'disabled'">
+                <a class="page-link" href="#" th:data-page="${pagenum + 1}">Next</a>
+            </li>
+        </ul>
+    </nav>
 </div>
 </body>
+<script
+        src="https://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // 검색 버튼 클릭 시 검색 수행
+        $("#button-search").click(function () {
+            var keyword = $("#searchInput").val();
+            if (keyword !== '') {
+                window.location.href = '/demo/list?keyword=' + encodeURIComponent(keyword) + '&pagenum=0';
+            }
+        });
+        // 페이지 번호 클릭 시 해당 페이지로 이동
+        $(".page-link").click(function(){
+            var page = $(this).data('page');
+            var keyword = $("#searchInput").val() || '';
+            window.location.href = '/demo/list?keyword=' + encodeURIComponent(keyword) + '&pagenum=' + page;
+        });
+    })
+</script>
 </html>

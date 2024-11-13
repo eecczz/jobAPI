@@ -8,4 +8,6 @@ public class JobPostingDto {
     private String title;
     private String company;
     private String location;
+    private String closingDate;
+    private String url;
 }

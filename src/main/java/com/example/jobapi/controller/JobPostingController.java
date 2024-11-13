@@ -1,5 +1,7 @@
 package com.example.jobapi.controller;
 
+import com.example.jobapi.dto.JobPostingDto;
+import com.example.jobapi.dto.SearchCondition;
 import com.example.jobapi.entity.JobPosting;
 import com.example.jobapi.repository.JobPostingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +22,23 @@ public class JobPostingController {
     private JobPostingRepository jobPostingRepository;
 
     @GetMapping("/demo/list")
-    public String listJobPostings(@RequestParam(value = "page", defaultValue = "1") int page, Model model) {
-        int pageSize = 20;
-        Pageable pageable = PageRequest.of(page - 1, pageSize);
-        Page<JobPosting> jobPostingsPage = jobPostingRepository.findAll(pageable);
+    public String listJobPostings(@RequestParam(value = "keyword", required = false) String keyword,
+                                  @RequestParam(value = "pagenum", defaultValue = "0") int pagenum, Model model) {
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("pagenum", pagenum);
+        SearchCondition condition = new SearchCondition();
 
-        model.addAttribute("jobPostingsPage", jobPostingsPage);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", jobPostingsPage.getTotalPages());
+        if (keyword != null) {
+            condition.setTitle(keyword);
+            condition.setCompany(keyword);
+        }
+
+        // 페이지 요청 설정
+        PageRequest pageRequest = PageRequest.of(pagenum, 20);
+
+        // 검색 조건을 통한 데이터 조회
+        Page<JobPostingDto> jobPostings = jobPostingRepository.searchPage(condition, pageRequest);
+        model.addAttribute("jobPostings", jobPostings);
         return "list";
     }
 

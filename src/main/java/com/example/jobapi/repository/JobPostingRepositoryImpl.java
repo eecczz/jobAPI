@@ -49,13 +49,13 @@ public class JobPostingRepositoryImpl implements JobPostingRepositoryCustom {
         BooleanBuilder builder = new BooleanBuilder();
 
         if (hasText(condition.getTitle())) {
-            builder.and(jobPosting.title.containsIgnoreCase(condition.getTitle()));
+            builder.or(jobPosting.title.containsIgnoreCase(condition.getTitle()));
         }
         if (hasText(condition.getCompany())) {
-            builder.and(jobPosting.company.containsIgnoreCase(condition.getCompany()));
+            builder.or(jobPosting.company.containsIgnoreCase(condition.getCompany()));
         }
         if (hasText(condition.getLocation())) {
-            builder.and(jobPosting.location.containsIgnoreCase(condition.getLocation()));
+            builder.or(jobPosting.location.containsIgnoreCase(condition.getLocation()));
         }
 
         QueryResults<JobPostingDto> results = queryFactory
