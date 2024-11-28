@@ -9,41 +9,62 @@
 <!-- 헤더 포함 -->
 <div th:replace="header :: header"></div>
 
-<!-- 여백 추가 -->
-<div style="margin-top: 150px;"></div> <!-- 여백을 충분히 줌 -->
-
-<!-- 필터링, 정렬, 검색 필터 -->
-<div class="filter-container">
-    <div class="filter-options">
-        <button class="filter-button">입사지원만 보기</button>
-        <button class="filter-button">취업축하금만 보기</button>
-    </div>
-
-    <div class="sorting-options">
-        <label for="itemsPerPage">페이지 당 표시 수:</label>
-        <select id="itemsPerPage" name="itemsPerPage">
-            <option value="20">20개씩</option>
-            <option value="50">50개씩</option>
-            <option value="100">100개씩</option>
-        </select>
-
-        <label for="sortOrder">정렬 기준:</label>
-        <select id="sortOrder" name="sortOrder">
-            <option value="recommend">관심등록순</option>
-            <option value="latest">최신순</option>
-            <option value="close">마감순</option>
-        </select>
-    </div>
-
-    <form class="mb-4">
-        <div class="input-group">
-            <input type="text" class="form-control" id="searchInput" placeholder="Search for products..." aria-label="Search for products" aria-describedby="button-search">
-            <button class="btn btn-outline-dark" type="button" id="button-search">Search</button>
+<div style="margin-top: 150px;"></div>
+<!-- 검색 및 필터링 -->
+<form th:action="@{/demo/list}" method="get" class="filter-form">
+    <div class="filter-container">
+        <!-- 지역 필터 -->
+        <div class="filter-group">
+            <label for="location">지역:</label>
+            <input type="text" id="location" name="location" placeholder="지역 입력" th:value="${param.location}">
         </div>
-    </form>
-</div>
+        <!-- 경력 필터 -->
+        <div class="filter-group">
+            <label for="experience">경력:</label>
+            <input type="text" id="experience" name="experience" placeholder="경력 입력" th:value="${param.experience}">
+        </div>
+        <!-- 급여 필터 -->
+        <div class="filter-group">
+            <label for="salary">급여:</label>
+            <input type="text" id="salary" name="salary" placeholder="급여 입력" th:value="${param.salary}">
+        </div>
+        <!-- 기술 스택 필터 -->
+        <div class="filter-group">
+            <label for="sector">기술 스택:</label>
+            <input type="text" id="sector" name="sector" placeholder="기술 스택 입력" th:value="${param.sector}">
+        </div>
+        <!-- 정렬 기준 -->
+        <div class="sorting-options">
+            <label for="sortOrder">정렬 기준:</label>
+            <select id="sortOrder" name="sortOrder" onchange="applySortOrder()">
+                <option value="salary" th:selected="${sortOrder == 'salary'}">급여순</option>
+                <option value="experience" th:selected="${sortOrder == 'experience'}">경력순</option>
+                <option value="close" th:selected="${sortOrder == 'close'}">마감순</option>
+            </select>
+        </div>
 
-<!-- 게시판 -->
+        <!-- 키워드 검색 -->
+        <div class="filter-group">
+            <label for="keyword">키워드:</label>
+            <input type="text" id="keyword" name="keyword" placeholder="키워드 검색" th:value="${param.keyword}">
+        </div>
+        <!-- 회사명 검색 -->
+        <div class="filter-group">
+            <label for="company">회사명:</label>
+            <input type="text" id="company" name="company" placeholder="회사명 검색" th:value="${param.company}">
+        </div>
+        <!-- 포지션 검색 -->
+        <div class="filter-group">
+            <label for="position">포지션:</label>
+            <input type="text" id="position" name="position" placeholder="포지션 검색" th:value="${param.position}">
+        </div>
+        <!-- 필터 버튼 -->
+        <div class="filter-group">
+            <button type="submit" class="filter-button">필터 적용</button>
+        </div>
+    </div>
+</form>
+
 <div class="container">
     <h2>전체 채용정보 <span th:text="${jobPostings.totalElements} + '건'"></span></h2>
 
@@ -53,7 +74,9 @@
                 <a th:href="@{/demo/read/{id}(id=${jobPosting.id})}" th:text="${jobPosting.title}">채용 제목</a>
                 <p class="company-name" th:text="${jobPosting.company}">회사 이름</p>
                 <p class="job-location" th:text="${jobPosting.location}">지역</p>
-                <p class="closing-date" th:text="${jobPosting.closingDate}">D-4</p>
+                <p><strong>경력:</strong> <span th:text="${jobPosting.experience}"></span></p>
+                <p><strong>급여:</strong> <span th:text="${jobPosting.salary}"></span></p>
+                <p><strong>기술스택:</strong> <span th:text="${jobPosting.sector}"></span></p>
             </div>
             <div class="apply-button">
                 <form th:action="@{/demo/apply/{id}(id=${jobPosting.id})}" method="post" style="display:inline;">
@@ -69,41 +92,54 @@
     <!-- 페이지네이션 -->
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-center">
-            <!-- Previous Button -->
-            <li class="page-item" th:classappend="${pagenum == 0} ? 'disabled'">
-                <a class="page-link" href="#" th:data-page="${pagenum - 1}" tabindex="-1">Previous</a>
+            <!-- 페이지네이션 수정 -->
+            <li class="page-item" th:classappend="${pagenum == null || pagenum == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum - 1})}" tabindex="-1">Previous</a>
             </li>
-            <!-- Page Numbers -->
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, jobPostings.totalPages - 1)}" th:classappend="${i == pagenum} ? 'active'">
-                <a class="page-link" href="#" th:text="${i + 1}" th:data-page="${i}"></a>
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, jobPostings.totalPages - 1)}"
+                th:classappend="${i == (pagenum == null ? 0 : pagenum)} ? 'active'">
+                <a class="page-link" th:href="@{/demo/list(pagenum=${i})}" th:text="${i + 1}"></a>
             </li>
-            <!-- Next Button -->
-            <li class="page-item" th:classappend="${pagenum == jobPostings.totalPages - 1} ? 'disabled'">
-                <a class="page-link" href="#" th:data-page="${pagenum + 1}">Next</a>
+            <li class="page-item" th:classappend="${pagenum == null || pagenum == jobPostings.totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum + 1})}">Next</a>
             </li>
+
         </ul>
     </nav>
-    <!-- Footer with fixed button -->
-    <div th:replace="footer :: footer"></div>
 </div>
 </body>
 <script
         src="https://code.jquery.com/jquery-latest.min.js"></script>
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // 검색 버튼 클릭 시 검색 수행
         $("#button-search").click(function () {
             var keyword = $("#searchInput").val();
             if (keyword !== '') {
-                window.location.href = '/demo/list?keyword=' + encodeURIComponent(keyword) + '&pagenum=0';
+                var urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('keyword', keyword);
+                urlParams.set('pagenum', 0); // 검색 시 첫 페이지로 이동
+                window.location.href = '/demo/list?' + urlParams.toString();
             }
         });
+
         // 페이지 번호 클릭 시 해당 페이지로 이동
-        $(".page-link").click(function(){
+        $(".page-link").click(function () {
             var page = $(this).data('page');
-            var keyword = $("#searchInput").val() || '';
-            window.location.href = '/demo/list?keyword=' + encodeURIComponent(keyword) + '&pagenum=' + page;
+            var urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('pagenum', page);
+            window.location.href = '/demo/list?' + urlParams.toString();
         });
-    })
+    });
+
+    // 정렬 옵션 변경 시 적용
+    function applySortOrder() {
+        var sortOrder = $("#sortOrder").val();
+        var urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('sortOrder', sortOrder);
+        urlParams.set('pagenum', 0); // 정렬 시 첫 페이지로 이동
+        window.location.href = '/demo/list?' + urlParams.toString();
+    }
 </script>
+
 </html>

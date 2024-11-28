@@ -7,10 +7,15 @@
 <body>
 <h1>채용공고 상세보기</h1>
 <div>
-    <p><strong>제목:</strong> <span th:text="${jobPosting.title}"></span></p>
-    <p><strong>회사명:</strong> <span th:text="${jobPosting.company}"></span></p>
-    <p><strong>위치:</strong> <span th:text="${jobPosting.location}"></span></p>
-    <p><strong>마감일:</strong> <span th:text="${jobPosting.closingDate}"></span></p>
+    <a th:href="@{/demo/read/{id}(id=${jobPosting.id})}" th:text="${jobPosting.title}">채용 제목</a>
+    <p class="company-name" th:text="${jobPosting.company}">회사 이름</p>
+    <p class="job-location" th:text="${jobPosting.location}">지역</p>
+    <p class="closing-date" th:text="${jobPosting.closingDate}">D-4</p>
+    <p><strong>고용 형태:</strong> <span th:text="${jobPosting.employmentType}">2년 이상</span></p>
+    <p><strong>기술 스택:</strong> <span th:text="${jobPosting.sector}">Java, Spring</span></p>
+    <p><strong>급여:</strong> <span th:text="${jobPosting.salary}">4,000만원</span></p>
+    <p><strong>경력:</strong> <span th:text="${jobPosting.experience}">2년 이상</span></p>
+
 
     <div>
         <!-- Edit Button, shown only if the user can edit -->

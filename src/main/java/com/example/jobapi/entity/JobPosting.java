@@ -15,8 +15,14 @@ public class JobPosting {
     private String title;
     private String company;
     private String location;
-    private String closingDate;
+    private String experience;
+    private String education;
+    private String employmentType;
+    private String deadline;
+    private String sector;
+    private String salary;
     private String url;
+    private String closingDate; // 마감일 필드 추가
 
     @ManyToOne
     private Member author; // 작성자 정보 추가

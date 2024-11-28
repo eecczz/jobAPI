@@ -9,10 +9,17 @@ import org.springframework.context.ApplicationContext;
 public class JobApiApplication {
 
     public static void main(String[] args) {
-        // SaraminCrawlingService를 직접 호출하여 테스트
+        // Spring Boot 애플리케이션 실행
         ApplicationContext context = SpringApplication.run(JobApiApplication.class, args);
-        SaraminCrawlingService crawlingService = context.getBean(SaraminCrawlingService.class);
-        crawlingService.crawlSaramin(); // 수동 실행 테스트
-    }
 
+        // SaraminCrawlingService를 수동으로 실행
+        SaraminCrawlingService crawlingService = context.getBean(SaraminCrawlingService.class);
+
+        // 키워드와 페이지 수를 지정하여 테스트 실행
+        String keyword = "python"; // 크롤링 키워드
+        int pages = 20; // 크롤링할 페이지 수
+
+        crawlingService.crawlSaramin(keyword, pages); // 크롤링 실행
+        System.out.println("크롤링 작업이 완료되었습니다.");
+    }
 }

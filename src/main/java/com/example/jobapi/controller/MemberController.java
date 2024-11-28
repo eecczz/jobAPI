@@ -39,14 +39,17 @@ public class MemberController {
     }
 
     @PostMapping("/signin")
-    public String signin(@RequestParam("username") String username, @RequestParam("password") String password, HttpSession session) {
+    public String signin(@RequestParam("username") String username,
+                         @RequestParam("password") String password,
+                         HttpSession session) {
         Member member = memberRepository.findByUsername(username);
         if (member != null && member.getPassword().equals(password)) {
-            session.setAttribute("loginMember", member);
+            session.setAttribute("sessionMember", member); // 세션에 저장
             return "redirect:/demo/list";
         }
         return "signin";
     }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {

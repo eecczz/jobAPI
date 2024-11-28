@@ -9,10 +9,14 @@ import com.example.jobapi.entity.SaveList;
 import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.JobPostingRepository;
 import com.example.jobapi.repository.SaveListRepository;
+import com.example.jobapi.service.SaraminCrawlingService;
+import com.example.jobapi.specification.JobPostingSpecification;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -29,32 +33,89 @@ public class JobPostingController {
     private SaveListRepository saveListRepository;
     @Autowired
     private AppListRepository appListRepository;
+    @Autowired
+    private SaraminCrawlingService crawlingService;
 
     private Member getLoginMember(HttpSession session) {
         return (Member) session.getAttribute("loginMember");
     }
 
-    @GetMapping("/list")
-    public String listJobPostings(@RequestParam(value = "keyword", required = false) String keyword,
-                                  @RequestParam(value = "pagenum", defaultValue = "0") int pagenum,
-                                  Model model,
-                                  @SessionAttribute(name = "loginMember", required = false) Member sessionMember
-    ) {
-        model.addAttribute("sessionMember", sessionMember);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("pagenum", pagenum);
+    @PostMapping("/crawl")
+    public String crawlSaramin(@RequestParam String keyword, @RequestParam int pages) {
+        crawlingService.crawlSaramin(keyword, pages);
+        return "Crawling completed for keyword: " + keyword;
+    }
 
-        SearchCondition condition = new SearchCondition();
-        if (keyword != null) {
-            condition.setTitle(keyword);
-            condition.setCompany(keyword);
+    @GetMapping("/list")
+    public String listJobPostings(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "company", required = false) String company,
+            @RequestParam(value = "position", required = false) String position,
+            @RequestParam(value = "sector", required = false) String sector,
+            @RequestParam(value = "location", required = false) String location,
+            @RequestParam(value = "experience", required = false) String experience,
+            @RequestParam(value = "salary", required = false) String salary,
+            @RequestParam(value = "sortOrder", required = false) String sortOrder,
+            @RequestParam(value = "pagenum", defaultValue = "0") int pagenum,
+            Model model
+    ) {
+        // Specification 생성
+        Specification<JobPosting> spec = Specification.where(
+                        JobPostingSpecification.hasKeyword(keyword))
+                .and(JobPostingSpecification.hasCompany(company))
+                .and(JobPostingSpecification.hasPosition(position))
+                .and(JobPostingSpecification.hasSector(sector))
+                .and(JobPostingSpecification.hasLocation(location))
+                .and(JobPostingSpecification.hasExperience(experience))
+                .and(JobPostingSpecification.hasSalary(salary));
+
+        // 정렬 처리
+        Sort sort = Sort.by(Sort.Direction.DESC, "closingDate"); // 기본값: 최신순
+        if (sortOrder != null) {
+            switch (sortOrder) {
+                case "close":
+                    sort = Sort.by(Sort.Direction.ASC, "closingDate");
+                    break;
+                case "salary":
+                    sort = Sort.by(Sort.Direction.DESC, "salary");
+                    break;
+                case "experience":
+                    sort = Sort.by(Sort.Direction.ASC, "experience");
+                    break;
+            }
         }
 
-        PageRequest pageRequest = PageRequest.of(pagenum, 20);
-        Page<JobPostingDto> jobPostings = jobPostingRepository.searchPage(condition, pageRequest);
-        model.addAttribute("jobPostings", jobPostings);
+        // Pageable 생성
+        PageRequest pageRequest = PageRequest.of(pagenum, 20, sort);
+
+        // Repository 호출
+        Page<JobPosting> jobPostings = crawlingService.getFilteredJobPostings(
+                location, experience, salary, sector, sortOrder, pagenum, 20
+        );
+        // JobPosting -> JobPostingDto로 매핑
+        Page<JobPostingDto> jobPostingsDto = jobPostings.map(jobPosting -> {
+            JobPostingDto dto = new JobPostingDto();
+            dto.setId(jobPosting.getId());
+            dto.setTitle(jobPosting.getTitle());
+            dto.setCompany(jobPosting.getCompany());
+            dto.setLocation(jobPosting.getLocation());
+            dto.setClosingDate(jobPosting.getClosingDate());
+            dto.setUrl(jobPosting.getUrl());
+            dto.setSalary(jobPosting.getSalary());
+            dto.setExperience(jobPosting.getExperience());
+            dto.setSector(jobPosting.getSector());
+            return dto;
+        });
+
+        // Model에 데이터 추가
+        model.addAttribute("jobPostings", jobPostingsDto);
+        model.addAttribute("sortOrder", sortOrder);
+        model.addAttribute("pagenum", pagenum);
         return "list";
     }
+
+
+
 
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
