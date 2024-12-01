@@ -124,8 +124,14 @@ public class JobPostingController {
     }
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model) {
+    public String showRegisterForm(Model model, HttpSession session) {
         model.addAttribute("jobPosting", new JobPosting());
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/login";
+        }
         return "register";
     }
 
@@ -136,7 +142,7 @@ public class JobPostingController {
 
         // 로그인 확인
         if (loggedIn == null || !loggedIn) {
-            return "redirect:/demo/signin";
+            return "redirect:/demo/login";
         }
 
         Member author = memberRepository.findByUsername(username);
@@ -158,10 +164,6 @@ public class JobPostingController {
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
-        if (loggedIn == null || !loggedIn) {
-            return "redirect:/demo/signin";
-        }
-
         model.addAttribute("jobPosting", jobPosting);
 
         // 작성자인지 확인
@@ -180,7 +182,7 @@ public class JobPostingController {
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
         if (loggedIn == null || !loggedIn) {
-            return "redirect:/demo/signin";
+            return "redirect:/demo/login";
         }
 
         // 작성자인지 확인
@@ -199,7 +201,7 @@ public class JobPostingController {
 
         // 로그인 확인
         if (loggedIn == null || !loggedIn) {
-            return "redirect:/demo/signin";
+            return "redirect:/demo/login";
         }
 
         jobPostingRepository.findById(id).ifPresentOrElse(existingJobPosting -> {
@@ -233,7 +235,7 @@ public class JobPostingController {
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
         if (loggedIn == null || !loggedIn) {
-            return "redirect:/demo/signin";
+            return "redirect:/demo/login";
         }
 
         // 작성자인지 확인
@@ -245,47 +247,63 @@ public class JobPostingController {
         return "redirect:/demo/list";
     }
 
-
-
-
     @PostMapping("/save/{id}")
     public String saveJobPosting(@PathVariable("id") Long jobId, HttpSession session) {
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
-        if (loggedIn != null && !loggedIn) {
-            return "redirect:/demo/signin";
+        // 로그인 확인
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/login";
         }
 
         JobPosting jobPosting = jobPostingRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
 
-        SaveList saveList = new SaveList();
-        saveList.setMember(memberRepository.findByUsername(username));
-        saveList.setJobPosting(jobPosting);
+        Member member = memberRepository.findByUsername(username);
 
+        // 중복 관심 등록 방지
+        boolean alreadySaved = saveListRepository.existsByMemberAndJobPosting(member, jobPosting);
+        if (alreadySaved) {
+            throw new IllegalStateException("이미 관심 등록된 공고입니다.");
+        }
+
+        // 관심 등록
+        SaveList saveList = new SaveList();
+        saveList.setMember(member);
+        saveList.setJobPosting(jobPosting);
         saveListRepository.save(saveList);
+
         return "redirect:/demo/list";
     }
-
 
     @PostMapping("/apply/{id}")
     public String applyForJob(@PathVariable("id") Long jobId, HttpSession session) {
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
-        if (loggedIn != null && !loggedIn) {
-            return "redirect:/demo/signin";
+        // 로그인 확인
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/login";
         }
 
         JobPosting jobPosting = jobPostingRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
 
-        AppList appList = new AppList();
-        appList.setMember(memberRepository.findByUsername(username));
-        appList.setJobPosting(jobPosting);
+        Member member = memberRepository.findByUsername(username);
 
+        // 중복 지원 방지
+        boolean alreadyApplied = appListRepository.existsByMemberAndJobPosting(member, jobPosting);
+        if (alreadyApplied) {
+            throw new IllegalStateException("이미 지원한 공고입니다.");
+        }
+
+        // 지원 등록
+        AppList appList = new AppList();
+        appList.setMember(member);
+        appList.setJobPosting(jobPosting);
         appListRepository.save(appList);
+
         return "redirect:/demo/list";
     }
 
