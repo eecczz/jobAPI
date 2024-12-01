@@ -5,6 +5,8 @@
     <title>Update Member Info</title>
 </head>
 <body>
+<!-- 헤더 포함 -->
+<div th:replace="header :: header"></div>
 <h1>회원 정보 수정</h1>
 <form th:action="@{/demo/member-modify}" method="post">
     <label for="password">비밀번호:</label>

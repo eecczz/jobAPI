@@ -25,12 +25,12 @@
             <div th:if="${loggedIn}">
                 <p>안녕하세요, <span th:text="${username}">사용자</span>님</p>
                 <a href="/demo/member-history" class="member-info-btn">정보조회</a> |
-                <a href="/auth/logout">Logout</a>
+                <a href="/demo/logout">Logout</a>
             </div>
             <div th:if="${!loggedIn}">
                 <p>로그인해주세요.</p>
-                <a href="/auth/login">Login</a>
-                <a href="/auth/signup">Sign Up</a>
+                <a href="/demo/login">Login</a>
+                <a href="/demo/signup">Sign Up</a>
             </div>
         </div>
 

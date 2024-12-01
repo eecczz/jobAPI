@@ -5,6 +5,8 @@
     <title>Job Posting Details</title>
 </head>
 <body>
+<!-- 헤더 포함 -->
+<div th:replace="header :: header"></div>
 <h1>채용공고 상세보기</h1>
 <div>
     <a th:href="@{/demo/read/{id}(id=${jobPosting.id})}" th:text="${jobPosting.title}">채용 제목</a>

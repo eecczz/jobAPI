@@ -19,7 +19,7 @@
         </div>
         <button type="button" onclick="submitLogin()">Login</button>
     </form>
-    <p>Don't have an account? <a href="/auth/signup">Sign up here</a></p>
+    <p>Don't have an account? <a href="/demo/signup">Sign up here</a></p>
 </div>
 </body>
 <script
@@ -31,7 +31,7 @@
             password: document.getElementById('password').value
         };
 
-        fetch('/auth/login', {
+        fetch('/demo/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,8 +45,9 @@
                 throw new Error('Login failed');
             })
             .then(data => {
-                alert('Login successful! Token: ' + data.token);
-                // Store the token or redirect user
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl; // /demo/list로 이동
+                }
             })
             .catch(error => alert(error.message));
     }

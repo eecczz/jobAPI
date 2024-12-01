@@ -8,6 +8,7 @@ import com.example.jobapi.entity.Member;
 import com.example.jobapi.entity.SaveList;
 import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.JobPostingRepository;
+import com.example.jobapi.repository.MemberRepository;
 import com.example.jobapi.repository.SaveListRepository;
 import com.example.jobapi.service.SaraminCrawlingService;
 import com.example.jobapi.specification.JobPostingSpecification;
@@ -17,11 +18,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -37,9 +40,17 @@ public class JobPostingController {
     private AppListRepository appListRepository;
     @Autowired
     private SaraminCrawlingService crawlingService;
+    @Autowired
+    private MemberRepository memberRepository;
 
-    private Member getLoginMember(HttpSession session) {
-        return (Member) session.getAttribute("loginMember");
+    // JWT 토큰에서 로그인된 Member를 추출하는 메서드
+    private Member getLoginMember() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String username = authentication.getName();
+            return memberRepository.findByUsername(username);
+        }
+        return null;
     }
 
     @PostMapping("/crawl")
@@ -59,15 +70,8 @@ public class JobPostingController {
             @RequestParam(value = "salary", required = false) String salary,
             @RequestParam(value = "sortOrder", required = false) String sortOrder,
             @RequestParam(value = "pagenum", defaultValue = "0") int pagenum,
-            Model model, HttpSession session
+            Model model
     ) {
-        // 세션에서 사용자 정보 확인
-        String username = (String) session.getAttribute("username");
-        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
-
-        // 사용자 정보를 모델에 추가
-        model.addAttribute("username", username != null ? username : "anonymousUser");
-        model.addAttribute("loggedIn", loggedIn != null ? loggedIn : false);
         // Specification 생성
         Specification<JobPosting> spec = Specification.where(
                         JobPostingSpecification.hasKeyword(keyword))
@@ -95,9 +99,8 @@ public class JobPostingController {
         }
 
         // Repository 호출
-        Page<JobPosting> jobPostings = crawlingService.getFilteredJobPostings(
-                location, experience, salary, sector, sortOrder, pagenum, 20
-        );
+        Page<JobPosting> jobPostings = jobPostingRepository.findAll(spec, PageRequest.of(pagenum, 20, sort));
+
         // JobPosting -> JobPostingDto로 매핑
         Page<JobPostingDto> jobPostingsDto = jobPostings.map(jobPosting -> {
             JobPostingDto dto = new JobPostingDto();
@@ -120,9 +123,6 @@ public class JobPostingController {
         return "list";
     }
 
-
-
-
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("jobPosting", new JobPosting());
@@ -131,78 +131,164 @@ public class JobPostingController {
 
     @PostMapping("/register")
     public String registerJobPosting(@ModelAttribute JobPosting jobPosting, HttpSession session) {
-        Member loginMember = getLoginMember(session);
-        jobPosting.setAuthor(loginMember);
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        // 로그인 확인
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
+        Member author = memberRepository.findByUsername(username);
+        if (author == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "작성자 정보를 찾을 수 없습니다.");
+        }
+
+        jobPosting.setAuthor(author);
         jobPostingRepository.save(jobPosting);
         return "redirect:/demo/list";
     }
+
 
     @GetMapping("/read/{id}")
     public String readJobPosting(@PathVariable("id") Long id, Model model, HttpSession session) {
         JobPosting jobPosting = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
-        Member loginMember = getLoginMember(session);
+
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
         model.addAttribute("jobPosting", jobPosting);
 
-        boolean canEdit = loginMember != null && jobPosting.getAuthor() != null && jobPosting.getAuthor().getId().equals(loginMember.getId());
+        // 작성자인지 확인
+        boolean canEdit = jobPosting.getAuthor() != null && jobPosting.getAuthor().getUsername().equals(username);
         model.addAttribute("canEdit", canEdit);
 
         return "read";
     }
 
     @GetMapping("/modify/{id}")
-    public String showModifyForm(@PathVariable("id") Long id, Model model) {
-        Optional<JobPosting> jobPosting = jobPostingRepository.findById(id);
-        jobPosting.ifPresent(value -> model.addAttribute("jobPosting", value));
+    public String showModifyForm(@PathVariable("id") Long id, Model model, HttpSession session) {
+        JobPosting jobPosting = jobPostingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
+
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
+        // 작성자인지 확인
+        if (!jobPosting.getAuthor().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "수정 권한이 없습니다.");
+        }
+
+        model.addAttribute("jobPosting", jobPosting);
         return "modify";
     }
 
     @PostMapping("/modify/{id}")
-    public String modifyJobPosting(@PathVariable("id") Long id, @ModelAttribute JobPosting jobPosting) {
-        jobPostingRepository.findById(id).ifPresent(existingJobPosting -> {
+    public String modifyJobPosting(@PathVariable("id") Long id, @ModelAttribute JobPosting jobPosting, HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        // 로그인 확인
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
+        jobPostingRepository.findById(id).ifPresentOrElse(existingJobPosting -> {
+            // 작성자인지 확인
+            Member author = existingJobPosting.getAuthor();
+            if (author == null || !author.getUsername().equals(username)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "수정 권한이 없습니다.");
+            }
+
+            // 수정 작업
             existingJobPosting.setTitle(jobPosting.getTitle());
             existingJobPosting.setCompany(jobPosting.getCompany());
             existingJobPosting.setLocation(jobPosting.getLocation());
             existingJobPosting.setClosingDate(jobPosting.getClosingDate());
             existingJobPosting.setUrl(jobPosting.getUrl());
             jobPostingRepository.save(existingJobPosting);
+        }, () -> {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 공고를 찾을 수 없습니다.");
         });
+
         return "redirect:/demo/list";
     }
 
+
     @PostMapping("/delete/{id}")
-    public String deleteJobPosting(@PathVariable("id") Long id) {
-        jobPostingRepository.deleteById(id);
+    public String deleteJobPosting(@PathVariable("id") Long id, HttpSession session) {
+        JobPosting jobPosting = jobPostingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
+
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn == null || !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
+        // 작성자인지 확인
+        if (!jobPosting.getAuthor().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "삭제 권한이 없습니다.");
+        }
+
+        jobPostingRepository.delete(jobPosting);
         return "redirect:/demo/list";
     }
+
+
+
 
     @PostMapping("/save/{id}")
     public String saveJobPosting(@PathVariable("id") Long jobId, HttpSession session) {
-        Member loginMember = getLoginMember(session);
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn != null && !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
         JobPosting jobPosting = jobPostingRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
 
         SaveList saveList = new SaveList();
-        saveList.setMember(loginMember);
+        saveList.setMember(memberRepository.findByUsername(username));
         saveList.setJobPosting(jobPosting);
 
         saveListRepository.save(saveList);
         return "redirect:/demo/list";
     }
 
+
     @PostMapping("/apply/{id}")
     public String applyForJob(@PathVariable("id") Long jobId, HttpSession session) {
-        Member loginMember = getLoginMember(session);
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        if (loggedIn != null && !loggedIn) {
+            return "redirect:/demo/signin";
+        }
+
         JobPosting jobPosting = jobPostingRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid job posting ID"));
 
         AppList appList = new AppList();
-        appList.setMember(loginMember);
+        appList.setMember(memberRepository.findByUsername(username));
         appList.setJobPosting(jobPosting);
 
         appListRepository.save(appList);
         return "redirect:/demo/list";
     }
+
 }
 
 

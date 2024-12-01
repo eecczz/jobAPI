@@ -4,22 +4,32 @@ import com.example.jobapi.dto.AuthResponse;
 import com.example.jobapi.dto.LoginRequest;
 import com.example.jobapi.dto.SignupRequest;
 import com.example.jobapi.entity.Member;
+import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.MemberRepository;
+import com.example.jobapi.repository.SaveListRepository;
 import com.example.jobapi.util.JWTUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Controller
-@RequestMapping("/auth")
+@RequestMapping("/demo")
 public class AuthController {
 
     private final JWTUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final MemberRepository memberRepository;
+    @Autowired
+    private SaveListRepository saveListRepository;
+    @Autowired
+    private AppListRepository appListRepository;
 
     @GetMapping("/login")
     public String loginPage() {
@@ -49,16 +59,23 @@ public class AuthController {
             session.setAttribute("username", member.getUsername());
             session.setAttribute("loggedIn", true);
 
-            return ResponseEntity.ok(new AuthResponse(token));
+            // 로그인 성공 시 리다이렉트 URL 반환
+            return ResponseEntity.ok()
+                    .body(Map.of(
+                            "message", "Login successful",
+                            "redirectUrl", "/demo/list",
+                            "token", token
+                    ));
         }
         return ResponseEntity.status(401).body("Invalid credentials");
     }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         // 세션 무효화
         session.invalidate();
-        return "redirect:/auth/login";
+        return "redirect:/demo/login";
     }
 
 
@@ -84,4 +101,77 @@ public class AuthController {
         return ResponseEntity.ok("Signup successful");
     }
 
+    // 회원 이력 페이지
+    @GetMapping("/member-history")
+    public String memberHistory(HttpSession session, Model model) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/demo/login";
+        }
+
+        Member member = memberRepository.findByUsername(username);
+        model.addAttribute("member", member);
+        model.addAttribute("saveList", saveListRepository.findByMember(member));
+        model.addAttribute("appList", appListRepository.findByMember(member));
+        return "member-history";
+    }
+
+    // 회원 정보 수정 페이지
+    @GetMapping("/member-modify")
+    public String modifyMemberForm(HttpSession session, Model model) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/demo/login";
+        }
+
+        Member member = memberRepository.findByUsername(username);
+        model.addAttribute("member", member);
+        return "member-modify";
+    }
+
+    // 회원 정보 수정 처리
+    @PostMapping("/member-modify")
+    public String modifyMember(@RequestParam("password") String password,
+                               @RequestParam("passwordConfirm") String passwordConfirm,
+                               HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/demo/login";
+        }
+
+        if (password.equals(passwordConfirm)) {
+            Member member = memberRepository.findByUsername(username);
+            member.setPassword(passwordEncoder.encode(password));
+            memberRepository.save(member);
+        }
+        return "redirect:/demo/member-history";
+    }
+
+    // 회원 탈퇴 처리
+    @PostMapping("/delete-member")
+    public String deleteMember(HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            return "redirect:/demo/login";
+        }
+
+        Member member = memberRepository.findByUsername(username);
+        memberRepository.delete(member);
+        session.invalidate();
+        return "redirect:/demo/login";
+    }
+
+    // 관심 저장 취소 처리
+    @PostMapping("/cancel-save/{id}")
+    public String cancelSave(@PathVariable("id") Long id) {
+        saveListRepository.deleteById(id);
+        return "redirect:/demo/member-history";
+    }
+
+    // 지원 취소 처리
+    @PostMapping("/cancel-apply/{id}")
+    public String cancelApply(@PathVariable("id") Long id) {
+        appListRepository.deleteById(id);
+        return "redirect:/demo/member-history";
+    }
 }

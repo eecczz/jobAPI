@@ -23,7 +23,7 @@
         </div>
         <button type="button" onclick="submitSignup()">Signup</button>
     </form>
-    <p>Already have an account? <a href="/auth/login">Login here</a></p>
+    <p>Already have an account? <a href="/demo/login">Login here</a></p>
 </div>
 </body>
 <script
@@ -36,7 +36,7 @@
             password: document.getElementById('password').value
         };
 
-        fetch('/auth/signup', {
+        fetch('/demo/signup', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

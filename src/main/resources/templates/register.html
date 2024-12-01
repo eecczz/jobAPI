@@ -5,6 +5,8 @@
     <title>Register Job Posting</title>
 </head>
 <body>
+<!-- 헤더 포함 -->
+<div th:replace="header :: header"></div>
 <h1>채용공고 등록</h1>
 <form th:action="@{/demo/register}" th:object="${jobPosting}" method="post">
     <label>제목:</label><input type="text" th:field="*{title}" /><br />
