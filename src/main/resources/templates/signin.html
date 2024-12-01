@@ -2,24 +2,53 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
+    <title>Login</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<div class="signin-container">
-    <h2>로그인</h2>
-    <form th:action="@{/demo/signin}" method="post">
+<div class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
         <div class="form-group">
-            <label for="username">아이디</label>
-            <input type="text" id="username" name="username" placeholder="아이디 입력" required>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username" required>
         </div>
         <div class="form-group">
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" name="password" placeholder="비밀번호 입력" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
         </div>
-        <button type="submit" class="btn-submit">로그인</button>
+        <button type="button" onclick="submitLogin()">Login</button>
     </form>
-    <p>아직 회원이 아니신가요? <a href="/demo/signup">회원가입</a></p>
+    <p>Don't have an account? <a href="/auth/signup">Sign up here</a></p>
 </div>
 </body>
+<script
+        src="https://code.jquery.com/jquery-latest.min.js"></script>
+<script>
+    function submitLogin() {
+        const formData = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+
+        fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Login failed');
+            })
+            .then(data => {
+                alert('Login successful! Token: ' + data.token);
+                // Store the token or redirect user
+            })
+            .catch(error => alert(error.message));
+    }
+</script>
 </html>

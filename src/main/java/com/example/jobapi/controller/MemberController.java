@@ -1,106 +1,57 @@
 package com.example.jobapi.controller;
 
+import com.example.jobapi.dto.LoginRequest;
+import com.example.jobapi.dto.LoginResponse;
 import com.example.jobapi.entity.Member;
-import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.MemberRepository;
-import com.example.jobapi.repository.SaveListRepository;
-import jakarta.servlet.http.HttpSession;
+import com.example.jobapi.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
-@RequestMapping("/demo")
+@RestController
+@RequestMapping("/member")
 public class MemberController {
+
     @Autowired
     private MemberRepository memberRepository;
 
     @Autowired
-    private SaveListRepository saveListRepository;
+    private JWTUtil jwtUtil;
 
     @Autowired
-    private AppListRepository appListRepository;
+    private PasswordEncoder passwordEncoder;
 
-    @GetMapping("/signup")
-    public String signupForm() {
-        return "signup";
-    }
-
+    // 회원가입
     @PostMapping("/signup")
-    public String signup(@ModelAttribute Member member) {
+    public ResponseEntity<String> signup(@RequestBody Member member) {
+        member.setPassword(passwordEncoder.encode(member.getPassword()));
         memberRepository.save(member);
-        return "redirect:/demo/signin";
+        return ResponseEntity.ok("회원가입 성공");
     }
 
-    @GetMapping("/signin")
-    public String signinForm() {
-        return "signin";
+    // 로그인
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+        Member member = memberRepository.findByUsername(loginRequest.getUsername());
+        if (member == null || !passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+            return ResponseEntity.status(401).body(null); // 인증 실패
+        }
+
+        // JWT 토큰 생성
+        String token = jwtUtil.generateToken(member.getUsername());
+        return ResponseEntity.ok(new LoginResponse(token));
     }
 
-    @PostMapping("/signin")
-    public String signin(@RequestParam("username") String username,
-                         @RequestParam("password") String password,
-                         HttpSession session) {
+    // 사용자 정보 가져오기 (JWT 기반)
+    @GetMapping("/me")
+    public ResponseEntity<Member> getCurrentUser(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.substring(7)); // "Bearer " 제거
         Member member = memberRepository.findByUsername(username);
-        if (member != null && member.getPassword().equals(password)) {
-            session.setAttribute("sessionMember", member); // 세션에 저장
-            return "redirect:/demo/list";
+        if (member == null) {
+            return ResponseEntity.status(404).body(null);
         }
-        return "signin";
-    }
-
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/demo/list";
-    }
-
-    @GetMapping("/member-history")
-    public String memberHistory(HttpSession session, Model model) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
-        model.addAttribute("member", loginMember);
-        model.addAttribute("saveList", saveListRepository.findByMember(loginMember));
-        model.addAttribute("appList", appListRepository.findByMember(loginMember));
-        return "member-history";
-    }
-
-    @GetMapping("/member-modify")
-    public String modifyMemberForm() {
-        return "member-modify";
-    }
-
-    @PostMapping("/member-modify")
-    public String modifyMember(@RequestParam("password") String password,
-                               @RequestParam("passwordConfirm") String passwordConfirm,
-                               HttpSession session) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
-
-        if (password.equals(passwordConfirm)) {
-            loginMember.setPassword(password);
-            memberRepository.save(loginMember);
-        }
-        return "redirect:/demo/member-history";
-    }
-
-    @PostMapping("/delete-member")
-    public String deleteMember(HttpSession session) {
-        Member loginMember = (Member) session.getAttribute("loginMember");
-        memberRepository.deleteById(loginMember.getId());
-        session.invalidate();
-        return "redirect:/demo/list";
-    }
-
-    @PostMapping("/cancel-save/{id}")
-    public String cancelSave(@PathVariable("id") Long id) {
-        saveListRepository.deleteById(id);
-        return "redirect:/demo/member-history";
-    }
-
-    @PostMapping("/cancel-apply/{id}")
-    public String cancelApply(@PathVariable("id") Long id) {
-        appListRepository.deleteById(id);
-        return "redirect:/demo/member-history";
+        return ResponseEntity.ok(member);
     }
 }

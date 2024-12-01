@@ -22,16 +22,19 @@
             </form>
         </div>
         <div class="header-right">
-            <span th:if="${sessionMember != null}">
-                Hello, <span th:text="${sessionMember.name}"></span> |
+            <div th:if="${loggedIn}">
+                <p>안녕하세요, <span th:text="${username}">사용자</span>님</p>
                 <a href="/demo/member-history" class="member-info-btn">정보조회</a> |
-                <a href="/demo/logout" class="logout-btn">로그아웃</a>
-            </span>
-            <span th:if="${sessionMember == null}">
-                <a href="/demo/signin" class="login-btn">로그인</a>
-                <a href="/demo/signup" class="signup-btn">회원가입</a>
-            </span>
+                <a href="/auth/logout">Logout</a>
+            </div>
+            <div th:if="${!loggedIn}">
+                <p>로그인해주세요.</p>
+                <a href="/auth/login">Login</a>
+                <a href="/auth/signup">Sign Up</a>
+            </div>
         </div>
+
+
     </div>
 </header>
 </body>

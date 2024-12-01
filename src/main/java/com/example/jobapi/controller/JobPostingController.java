@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -57,8 +59,15 @@ public class JobPostingController {
             @RequestParam(value = "salary", required = false) String salary,
             @RequestParam(value = "sortOrder", required = false) String sortOrder,
             @RequestParam(value = "pagenum", defaultValue = "0") int pagenum,
-            Model model
+            Model model, HttpSession session
     ) {
+        // 세션에서 사용자 정보 확인
+        String username = (String) session.getAttribute("username");
+        Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
+
+        // 사용자 정보를 모델에 추가
+        model.addAttribute("username", username != null ? username : "anonymousUser");
+        model.addAttribute("loggedIn", loggedIn != null ? loggedIn : false);
         // Specification 생성
         Specification<JobPosting> spec = Specification.where(
                         JobPostingSpecification.hasKeyword(keyword))
@@ -84,9 +93,6 @@ public class JobPostingController {
                     break;
             }
         }
-
-        // Pageable 생성
-        PageRequest pageRequest = PageRequest.of(pagenum, 20, sort);
 
         // Repository 호출
         Page<JobPosting> jobPostings = crawlingService.getFilteredJobPostings(
