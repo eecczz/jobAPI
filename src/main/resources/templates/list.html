@@ -20,8 +20,57 @@
         .pagination .disabled .page-link {
             color: #6c757d; /* 비활성화 링크 색상 */
         }
+
+        /* 필터 컨테이너 스타일 */
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* 필터 간격 조정 */
+            justify-content: space-between;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column; /* 레이블과 입력 필드를 수직 정렬 */
+            align-items: flex-start;
+            width: 200px; /* 필터 그룹의 너비 */
+        }
+
+        .filter-group label {
+            margin-bottom: 5px; /* 레이블과 입력 필드 간격 */
+            font-weight: bold;
+        }
+
+        .sorting-options {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filter-button {
+            margin-top: 10px;
+        }
+
+        /* 검색 결과 영역 */
+        .container {
+            margin-top: 20px;
+        }
+
+        /* 채용 정보 스타일 */
+        .job-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .apply-button form {
+            display: inline-block;
+            margin-right: 10px;
+        }
     </style>
-    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <!-- 헤더 포함 -->
@@ -110,20 +159,27 @@
     <!-- 페이지네이션 -->
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-center">
-            <!-- 페이지네이션 수정 -->
+            <!-- 이전 페이지 버튼 -->
             <li class="page-item" th:classappend="${pagenum == null || pagenum == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum - 1})}" tabindex="-1">Previous</a>
+                <a class="page-link"
+                   th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum - 1}, keyword=${param.keyword}, company=${param.company}, position=${param.position}, sector=${param.sector}, location=${param.location}, experience=${param.experience}, salary=${param.salary}, sortOrder=${param.sortOrder})}"
+                   tabindex="-1">Previous</a>
             </li>
+            <!-- 페이지 번호 버튼 -->
             <li class="page-item" th:each="i : ${#numbers.sequence(0, jobPostings.totalPages - 1)}"
                 th:classappend="${i == (pagenum == null ? 0 : pagenum)} ? 'active'">
-                <a class="page-link" th:href="@{/demo/list(pagenum=${i})}" th:text="${i + 1}"></a>
+                <a class="page-link"
+                   th:href="@{/demo/list(pagenum=${i}, keyword=${param.keyword}, company=${param.company}, position=${param.position}, sector=${param.sector}, location=${param.location}, experience=${param.experience}, salary=${param.salary}, sortOrder=${param.sortOrder})}"
+                   th:text="${i + 1}"></a>
             </li>
+            <!-- 다음 페이지 버튼 -->
             <li class="page-item" th:classappend="${pagenum == null || pagenum == jobPostings.totalPages - 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum + 1})}">Next</a>
+                <a class="page-link"
+                   th:href="@{/demo/list(pagenum=${pagenum == null ? 0 : pagenum + 1}, keyword=${param.keyword}, company=${param.company}, position=${param.position}, sector=${param.sector}, location=${param.location}, experience=${param.experience}, salary=${param.salary}, sortOrder=${param.sortOrder})}">Next</a>
             </li>
-
         </ul>
     </nav>
+
     <!-- Footer with fixed button -->
     <div th:replace="footer :: footer"></div>
 </div>
@@ -131,27 +187,6 @@
 <script
         src="https://code.jquery.com/jquery-latest.min.js"></script>
 <script>
-    $(document).ready(function () {
-        // 검색 버튼 클릭 시 검색 수행
-        $("#button-search").click(function () {
-            var keyword = $("#searchInput").val();
-            if (keyword !== '') {
-                var urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('keyword', keyword);
-                urlParams.set('pagenum', 0); // 검색 시 첫 페이지로 이동
-                window.location.href = '/demo/list?' + urlParams.toString();
-            }
-        });
-
-        // 페이지 번호 클릭 시 해당 페이지로 이동
-        $(".page-link").click(function () {
-            var page = $(this).data('page');
-            var urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('pagenum', page);
-            window.location.href = '/demo/list?' + urlParams.toString();
-        });
-    });
-
     // 정렬 옵션 변경 시 적용
     function applySortOrder() {
         var sortOrder = $("#sortOrder").val();
