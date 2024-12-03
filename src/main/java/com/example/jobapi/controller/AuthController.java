@@ -2,13 +2,16 @@ package com.example.jobapi.controller;
 
 import com.example.jobapi.dto.AuthResponse;
 import com.example.jobapi.dto.LoginRequest;
+import com.example.jobapi.dto.RefreshTokenRequest;
 import com.example.jobapi.dto.SignupRequest;
 import com.example.jobapi.entity.Member;
+import com.example.jobapi.exception.ForbiddenException;
+import com.example.jobapi.exception.NotFoundException;
+import com.example.jobapi.exception.UnauthorizedException;
 import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.MemberRepository;
 import com.example.jobapi.repository.SaveListRepository;
 import com.example.jobapi.util.JWTUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +20,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Controller
-@RequestMapping("/demo")
+@RequestMapping("/auth")
 public class AuthController {
 
     private final JWTUtil jwtUtil;
@@ -31,16 +36,7 @@ public class AuthController {
     @Autowired
     private AppListRepository appListRepository;
 
-    @GetMapping("/login")
-    public String loginPage() {
-        return "signin"; // login.html을 반환
-    }
-
-    // 회원가입 페이지 요청
-    @GetMapping("/signup")
-    public String signupPage() {
-        return "signup"; // signup.html을 반환
-    }
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
 
     public AuthController(JWTUtil jwtUtil, PasswordEncoder passwordEncoder, MemberRepository memberRepository) {
         this.jwtUtil = jwtUtil;
@@ -48,130 +44,143 @@ public class AuthController {
         this.memberRepository = memberRepository;
     }
 
-    @PostMapping("/login")
-    @ResponseBody
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
-        Member member = memberRepository.findByUsername(loginRequest.getUsername());
-        if (member != null && passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
-            String token = jwtUtil.generateToken(member.getUsername());
-
-            // 세션에 사용자 정보 저장
-            session.setAttribute("username", member.getUsername());
-            session.setAttribute("loggedIn", true);
-
-            // 로그인 성공 시 리다이렉트 URL 반환
-            return ResponseEntity.ok()
-                    .body(Map.of(
-                            "message", "Login successful",
-                            "redirectUrl", "/demo/list",
-                            "token", token
-                    ));
-        }
-        return ResponseEntity.status(401).body("Invalid credentials");
-    }
-
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        // 세션 무효화
-        session.invalidate();
-        return "redirect:/demo/login";
-    }
-
-
-
-
-    @PostMapping("/signup")
+    @PostMapping("/register")
     @ResponseBody
     public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
-        // 1. 중복된 사용자명 검증
-        if (memberRepository.findByUsername(signupRequest.getUsername()) != null) {
-            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+        String username = signupRequest.getUsername();
+
+        // 이메일 형식 검증
+        if (!Pattern.matches(EMAIL_REGEX, username)) {
+            throw new ForbiddenException("이메일 형식이 올바르지 않습니다.");
         }
 
-        // 2. Member 객체 생성 및 값 설정
-        Member member = new Member();
-        member.setUsername(signupRequest.getUsername()); // 사용자명 설정
-        member.setPassword(passwordEncoder.encode(signupRequest.getPassword())); // 비밀번호 암호화
+        // 중복된 사용자명 검증
+        if (memberRepository.findByUsername(username) != null) {
+            throw new ForbiddenException("이미 사용 중인 사용자 이름입니다.");
+        }
 
-        // 3. 데이터베이스에 사용자 저장
+        // 회원가입 처리
+        Member member = new Member();
+        member.setUsername(username); // 사용자명 설정
+        member.setPassword(passwordEncoder.encode(signupRequest.getPassword())); // 비밀번호 암호화
         memberRepository.save(member);
 
-        // 4. 성공 메시지 반환
         return ResponseEntity.ok("Signup successful");
     }
 
     // 회원 이력 페이지
-    @GetMapping("/member-history")
-    public String memberHistory(HttpSession session, Model model) {
+    @GetMapping("/profile")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> memberHistory(HttpSession session) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
-            return "redirect:/demo/login";
+            throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
         Member member = memberRepository.findByUsername(username);
-        model.addAttribute("member", member);
-        model.addAttribute("saveList", saveListRepository.findByMember(member));
-        model.addAttribute("appList", appListRepository.findByMember(member));
-        return "member-history";
+        if (member == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        // 반환할 데이터를 Map에 담음
+        Map<String, Object> response = new HashMap<>();
+        response.put("member", member);
+        response.put("saveList", saveListRepository.findByMember(member));
+        response.put("appList", appListRepository.findByMember(member));
+
+        return ResponseEntity.ok(response); // JSON 형식으로 응답 반환
     }
 
-    // 회원 정보 수정 페이지
-    @GetMapping("/member-modify")
-    public String modifyMemberForm(HttpSession session, Model model) {
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> updates, HttpSession session) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
-            return "redirect:/demo/login";
+            throw new UnauthorizedException("로그인이 필요합니다.");
         }
 
         Member member = memberRepository.findByUsername(username);
-        model.addAttribute("member", member);
-        return "member-modify";
-    }
-
-    // 회원 정보 수정 처리
-    @PostMapping("/member-modify")
-    public String modifyMember(@RequestParam("password") String password,
-                               @RequestParam("passwordConfirm") String passwordConfirm,
-                               HttpSession session) {
-        String username = (String) session.getAttribute("username");
-        if (username == null) {
-            return "redirect:/demo/login";
+        if (member == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        if (password.equals(passwordConfirm)) {
+        // 이메일 변경
+        if (updates.containsKey("email")) {
+            String newEmail = updates.get("email");
+            if (!Pattern.matches(EMAIL_REGEX, newEmail)) {
+                throw new ForbiddenException("이메일 형식이 올바르지 않습니다.");
+            }
+            if (!newEmail.equals(member.getUsername()) && memberRepository.findByUsername(newEmail) != null) {
+                throw new ForbiddenException("이미 사용 중인 이메일입니다.");
+            }
+            member.setUsername(newEmail);
+        }
+
+        // 비밀번호 변경
+        if (updates.containsKey("password")) {
+            String newPassword = updates.get("password");
+            if (newPassword.isEmpty()) {
+                throw new ForbiddenException("비밀번호는 비워둘 수 없습니다.");
+            }
+            member.setPassword(passwordEncoder.encode(newPassword));
+        }
+
+        memberRepository.save(member);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "회원정보가 성공적으로 수정되었습니다.",
+                "username", member.getUsername()
+        ));
+    }
+
+    @PostMapping("/login")
+    @ResponseBody
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
+        Member member = memberRepository.findByUsername(loginRequest.getUsername());
+        if (member == null) {
+            throw new NotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+            throw new UnauthorizedException("잘못된 인증 정보입니다.");
+        }
+
+        String token = jwtUtil.generateToken(member.getUsername());
+
+        // 세션에 사용자 정보 저장
+        session.setAttribute("username", member.getUsername());
+        session.setAttribute("loggedIn", true);
+
+        return ResponseEntity.ok()
+                .body(Map.of(
+                        "message", "Login successful",
+                        "redirectUrl", "/demo/list",
+                        "token", token
+                ));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken().trim(); // 토큰 값 추출
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+
+            if (username == null || !jwtUtil.validateToken(refreshToken, username)) {
+                throw new UnauthorizedException("잘못된 리프레시 토큰입니다.");
+            }
+
             Member member = memberRepository.findByUsername(username);
-            member.setPassword(passwordEncoder.encode(password));
-            memberRepository.save(member);
+            if (member == null) {
+                throw new NotFoundException("사용자를 찾을 수 없습니다.");
+            }
+
+            // 새로운 액세스 토큰 생성 (필요시)
+            // String newAccessToken = jwtUtil.generateToken(username);
+
+            return ResponseEntity.ok("Token refreshed successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new UnauthorizedException("토큰 갱신에 실패했습니다.");
         }
-        return "redirect:/demo/member-history";
     }
 
-    // 회원 탈퇴 처리
-    @PostMapping("/delete-member")
-    public String deleteMember(HttpSession session) {
-        String username = (String) session.getAttribute("username");
-        if (username == null) {
-            return "redirect:/demo/login";
-        }
-
-        Member member = memberRepository.findByUsername(username);
-        memberRepository.delete(member);
-        session.invalidate();
-        return "redirect:/demo/login";
-    }
-
-    // 관심 저장 취소 처리
-    @PostMapping("/cancel-save/{id}")
-    public String cancelSave(@PathVariable("id") Long id) {
-        saveListRepository.deleteById(id);
-        return "redirect:/demo/member-history";
-    }
-
-    // 지원 취소 처리
-    @PostMapping("/cancel-apply/{id}")
-    public String cancelApply(@PathVariable("id") Long id) {
-        appListRepository.deleteById(id);
-        return "redirect:/demo/member-history";
-    }
 }

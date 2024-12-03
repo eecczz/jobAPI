@@ -1,12 +1,18 @@
 package com.example.jobapi.dto;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class AuthResponse {
-    private String token;
+    private String accessToken;
 
-    public AuthResponse(String token) {
-        this.token = token;
+    public AuthResponse(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }

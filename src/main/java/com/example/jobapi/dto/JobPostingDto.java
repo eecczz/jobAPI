@@ -18,4 +18,6 @@ public class JobPostingDto {
     private String employmentType; // 고용 형태 (정규직, 계약직 등)
     private String education;      // 학력 요구사항
     private Member author;      // 학력 요구사항
+    private Long view;
+    private Boolean cancel = true;
 }

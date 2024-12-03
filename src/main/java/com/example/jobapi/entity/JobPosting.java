@@ -26,4 +26,6 @@ public class JobPosting {
 
     @ManyToOne
     private Member author; // 작성자 정보 추가
+    private Long view = 0L;
+    private Boolean cancel = true;
 }

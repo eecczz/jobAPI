@@ -25,12 +25,18 @@ public class JwtAuthenticationFilter extends org.springframework.web.filter.Once
             throws ServletException, IOException {
         String token = resolveToken(request);
 
-        if (token != null && jwtUtil.validateToken(token)) {
-            // JWT 토큰이 유효한 경우 사용자 정보 추출
+        if (token != null) {
+            // 사용자 이름 추출
             String username = jwtUtil.extractUsername(token);
-            request.setAttribute("jwtToken", new JwtToken(username, token));
+
+            // JWT 토큰 유효성 확인
+            if (username != null && jwtUtil.validateToken(token, username)) {
+                // 유효한 토큰인 경우 JwtToken 객체를 생성하여 요청 속성에 추가
+                request.setAttribute("jwtToken", new JwtToken(username, token));
+            }
         }
 
+        // 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
 

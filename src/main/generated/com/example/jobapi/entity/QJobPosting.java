@@ -24,6 +24,8 @@ public class QJobPosting extends EntityPathBase<JobPosting> {
 
     public final QMember author;
 
+    public final BooleanPath cancel = createBoolean("cancel");
+
     public final StringPath closingDate = createString("closingDate");
 
     public final StringPath company = createString("company");
@@ -47,6 +49,8 @@ public class QJobPosting extends EntityPathBase<JobPosting> {
     public final StringPath title = createString("title");
 
     public final StringPath url = createString("url");
+
+    public final NumberPath<Long> view = createNumber("view", Long.class);
 
     public QJobPosting(String variable) {
         this(JobPosting.class, forVariable(variable), INITS);

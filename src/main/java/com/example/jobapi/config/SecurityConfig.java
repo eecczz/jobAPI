@@ -1,6 +1,6 @@
 package com.example.jobapi.config;
 
-import com.example.jobapi.filter.JWTFilter;
+import com.example.jobapi.security.JWTFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -1,4 +1,4 @@
-package com.example.jobapi.filter;
+package com.example.jobapi.security;
 
 import com.example.jobapi.util.JWTUtil;
 import jakarta.servlet.FilterChain;
@@ -24,9 +24,13 @@ public class JWTFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = resolveToken(request);
 
-        if (token != null && jwtUtil.validateToken(token)) {
-            String username = jwtUtil.extractUsername(token);
-            request.setAttribute("username", username);
+        if (token != null) {
+            String username = jwtUtil.extractUsername(token); // 토큰에서 사용자 이름 추출
+
+            // 사용자 이름이 null이 아니고 토큰이 유효한 경우 처리
+            if (username != null && jwtUtil.validateToken(token, username)) {
+                request.setAttribute("username", username);
+            }
         }
 
         filterChain.doFilter(request, response);
