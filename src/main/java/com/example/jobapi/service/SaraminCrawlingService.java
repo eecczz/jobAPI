@@ -48,7 +48,6 @@ public class SaraminCrawlingService {
                     sort = Sort.by(Sort.Direction.DESC, "experience");
                     break;
                 default:
-                    // 기본 정렬 옵션 처리
                     sort = Sort.by(Sort.Direction.ASC, "id");
                     break;
             }
@@ -58,83 +57,86 @@ public class SaraminCrawlingService {
         return jobPostingRepository.findAll(spec, pageable);
     }
 
-
     public void crawlSaramin(String keyword, int pages) {
         List<JobPosting> jobPostings = new ArrayList<>();
         String baseUrl = "https://www.saramin.co.kr/zf_user/search/recruit?searchType=search&searchword=";
 
         for (int page = 1; page <= pages; page++) {
-            try {
-                String url = baseUrl + keyword + "&recruitPage=" + page;
-                Document doc = Jsoup.connect(url)
-                        .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                        .timeout(10000)
-                        .get();
+            int retryCount = 0;
+            boolean success = false;
 
-                Elements jobListings = doc.select(".item_recruit");
+            while (retryCount < 3 && !success) { // 최대 3번 재시도
+                try {
+                    String url = baseUrl + keyword + "&recruitPage=" + page;
+                    System.out.println("Fetching URL: " + url + " (Attempt " + (retryCount + 1) + ")");
 
-                for (Element job : jobListings) {
-                    try {
-                        // 회사명
-                        String company = job.selectFirst(".corp_name a").text();
+                    Document doc = Jsoup.connect(url)
+                            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                            .timeout(30000) // 타임아웃 30초로 증가
+                            .get();
 
-                        // 제목
-                        String title = job.selectFirst(".job_tit a").text();
+                    Elements jobListings = doc.select(".item_recruit");
 
-                        // 링크
-                        String link = "https://www.saramin.co.kr" + job.selectFirst(".job_tit a").attr("href");
+                    for (Element job : jobListings) {
+                        try {
+                            String company = job.selectFirst(".corp_name a").text();
+                            String title = job.selectFirst(".job_tit a").text();
+                            String link = "https://www.saramin.co.kr" + job.selectFirst(".job_tit a").attr("href");
 
-                        // 지역, 경력, 학력, 고용형태
-                        Elements conditions = job.select(".job_condition span");
-                        String location = conditions.size() > 0 ? conditions.get(0).text() : "";
-                        String experience = conditions.size() > 1 ? conditions.get(1).text() : "";
-                        String education = conditions.size() > 2 ? conditions.get(2).text() : "";
-                        String employmentType = conditions.size() > 3 ? conditions.get(3).text() : "";
+                            Elements conditions = job.select(".job_condition span");
+                            String location = conditions.size() > 0 ? conditions.get(0).text() : "";
+                            String experience = conditions.size() > 1 ? conditions.get(1).text() : "";
+                            String education = conditions.size() > 2 ? conditions.get(2).text() : "";
+                            String employmentType = conditions.size() > 3 ? conditions.get(3).text() : "";
 
-                        // 마감일
-                        String deadline = job.selectFirst(".job_date .date").text();
+                            String deadline = job.selectFirst(".job_date .date").text();
+                            Element jobSector = job.selectFirst(".job_sector");
+                            String sector = jobSector != null ? jobSector.text() : "";
 
-                        // 직무 분야
-                        Element jobSector = job.selectFirst(".job_sector");
-                        String sector = jobSector != null ? jobSector.text() : "";
+                            Element salaryBadge = job.selectFirst(".area_badge .badge");
+                            String salary = salaryBadge != null ? salaryBadge.text() : "";
 
-                        // 연봉
-                        Element salaryBadge = job.selectFirst(".area_badge .badge");
-                        String salary = salaryBadge != null ? salaryBadge.text() : "";
+                            JobPosting jobPosting = new JobPosting();
+                            jobPosting.setTitle(title);
+                            jobPosting.setCompany(company);
+                            jobPosting.setLocation(location);
+                            jobPosting.setExperience(experience);
+                            jobPosting.setEducation(education);
+                            jobPosting.setEmploymentType(employmentType);
+                            jobPosting.setClosingDate(deadline);
+                            jobPosting.setSector(sector);
+                            jobPosting.setSalary(salary);
+                            jobPosting.setUrl(link);
 
-                        JobPosting jobPosting = new JobPosting();
-                        jobPosting.setTitle(title);
-                        jobPosting.setCompany(company);
-                        jobPosting.setLocation(location);
-                        jobPosting.setExperience(experience);
-                        jobPosting.setEducation(education);
-                        jobPosting.setEmploymentType(employmentType);
-                        jobPosting.setClosingDate(deadline);
-                        jobPosting.setSector(sector);
-                        jobPosting.setSalary(salary);
-                        jobPosting.setUrl(link);
-
-                        // 중복 확인 후 추가
-                        if (!jobPostingRepository.existsByUrl(link)) {
-                            jobPostings.add(jobPosting);
+                            if (!jobPostingRepository.existsByUrl(link)) {
+                                jobPostings.add(jobPosting);
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Error parsing job posting: " + e.getMessage());
                         }
-                    } catch (Exception e) {
-                        System.out.println("Error parsing job posting: " + e.getMessage());
                     }
+
+                    System.out.println("Page " + page + " crawled successfully. Found " + jobListings.size() + " jobs.");
+                    success = true; // 크롤링 성공
+                } catch (IOException e) {
+                    retryCount++;
+                    System.out.println("Error fetching page " + page + ": " + e.getMessage() + ". Retrying...");
                 }
+            }
 
-                System.out.println("Page " + page + " crawled successfully. Found " + jobListings.size() + " jobs.");
+            if (!success) {
+                System.out.println("Failed to fetch page " + page + " after 3 attempts. Skipping...");
+            }
 
-                // 서버 부하 방지를 위해 타임간격 추가
-                TimeUnit.SECONDS.sleep(2);
-
-            } catch (IOException | InterruptedException e) {
-                System.out.println("Error fetching page " + page + ": " + e.getMessage());
+            try {
+                TimeUnit.SECONDS.sleep(5); // 요청 간 대기 시간 증가
+            } catch (InterruptedException e) {
+                System.out.println("Sleep interrupted: " + e.getMessage());
             }
         }
 
-        // 저장
         jobPostingRepository.saveAll(jobPostings);
         System.out.println("총 " + jobPostings.size() + "개의 채용공고가 저장되었습니다.");
     }
 }
+
