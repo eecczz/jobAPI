@@ -31,6 +31,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
+
 
     // 로깅 의존성 (Logback은 Spring Boot 기본 제공, 추가 확장 가능)
     implementation 'org.slf4j:slf4j-api:2.0.9'
