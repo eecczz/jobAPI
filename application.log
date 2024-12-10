@@ -12,3 +12,87 @@
 2024-12-11 00:21:47 [Test worker] DEBUG c.e.jobapi.JobApiApplicationTests - Running with Spring Boot v3.3.1, Spring v6.1.10
 2024-12-11 00:21:47 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - No active profile set, falling back to 1 default profile: "default"
 2024-12-11 00:22:03 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Started JobApiApplicationTests in 16.693 seconds (process running for 19.684)
+2024-12-11 00:34:09 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Starting JobApiApplicationTests using Java 17.0.9 with PID 14952 (started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 00:34:09 [Test worker] DEBUG c.e.jobapi.JobApiApplicationTests - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 00:34:09 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 00:34:26 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Started JobApiApplicationTests in 16.936 seconds (process running for 19.724)
+2024-12-11 00:42:59 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Starting JobApiApplicationTests using Java 17.0.9 with PID 1800 (started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 00:42:59 [Test worker] DEBUG c.e.jobapi.JobApiApplicationTests - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 00:42:59 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 00:43:16 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Started JobApiApplicationTests in 17.802 seconds (process running for 21.998)
+2024-12-11 00:58:53 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Starting JobApiApplication using Java 17.0.9 with PID 31868 (C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 00:58:53 [restartedMain] DEBUG c.example.jobapi.JobApiApplication - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 00:58:53 [restartedMain] INFO  c.example.jobapi.JobApiApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 00:59:01 [restartedMain] DEBUG c.example.jobapi.security.JWTFilter - Filter 'JWTFilter' configured for use
+2024-12-11 00:59:10 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Started JobApiApplication in 20.832 seconds (process running for 27.027)
+2024-12-11 01:02:47 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Starting JobApiApplication using Java 17.0.9 with PID 17676 (C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 01:02:47 [restartedMain] DEBUG c.example.jobapi.JobApiApplication - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 01:02:47 [restartedMain] INFO  c.example.jobapi.JobApiApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 01:02:53 [restartedMain] DEBUG c.example.jobapi.security.JWTFilter - Filter 'JWTFilter' configured for use
+2024-12-11 01:03:02 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Started JobApiApplication in 16.762 seconds (process running for 19.696)
+2024-12-11 01:18:45 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Starting JobApiApplication using Java 17.0.9 with PID 17676 (C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 01:18:45 [restartedMain] DEBUG c.example.jobapi.JobApiApplication - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 01:18:45 [restartedMain] INFO  c.example.jobapi.JobApiApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 01:18:47 [restartedMain] DEBUG c.example.jobapi.security.JWTFilter - Filter 'JWTFilter' configured for use
+2024-12-11 01:18:49 [restartedMain] ERROR o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jobPostingController' defined in file [C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes\com\example\jobapi\controller\JobPostingController.class]: Post-processing of merged bean definition failed
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:577) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:522) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:337) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:335) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:975) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:962) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:624) ~[spring-context-6.1.10.jar:6.1.10]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:754) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:456) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:335) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1363) ~[spring-boot-3.3.1.jar:3.3.1]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1352) ~[spring-boot-3.3.1.jar:3.3.1]
+	at com.example.jobapi.JobApiApplication.main(JobApiApplication.java:13) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.3.1.jar:3.3.1]
+Caused by: java.lang.IllegalStateException: Failed to introspect Class [com.example.jobapi.controller.JobPostingController] from ClassLoader [org.springframework.boot.devtools.restart.classloader.RestartClassLoader@5d168b57]
+	at org.springframework.util.ReflectionUtils.getDeclaredFields(ReflectionUtils.java:757) ~[spring-core-6.1.10.jar:6.1.10]
+	at org.springframework.util.ReflectionUtils.doWithLocalFields(ReflectionUtils.java:689) ~[spring-core-6.1.10.jar:6.1.10]
+	at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.buildPersistenceMetadata(PersistenceAnnotationBeanPostProcessor.java:436) ~[spring-orm-6.1.10.jar:6.1.10]
+	at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.findPersistenceMetadata(PersistenceAnnotationBeanPostProcessor.java:417) ~[spring-orm-6.1.10.jar:6.1.10]
+	at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.findInjectionMetadata(PersistenceAnnotationBeanPostProcessor.java:376) ~[spring-orm-6.1.10.jar:6.1.10]
+	at org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor.postProcessMergedBeanDefinition(PersistenceAnnotationBeanPostProcessor.java:353) ~[spring-orm-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyMergedBeanDefinitionPostProcessors(AbstractAutowireCapableBeanFactory.java:1085) ~[spring-beans-6.1.10.jar:6.1.10]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:574) ~[spring-beans-6.1.10.jar:6.1.10]
+	... 20 common frames omitted
+Caused by: java.lang.NoClassDefFoundError: com/example/jobapi/service/SaraminCrawlingService
+	at java.base/java.lang.Class.getDeclaredFields0(Native Method) ~[na:na]
+	at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3297) ~[na:na]
+	at java.base/java.lang.Class.getDeclaredFields(Class.java:2371) ~[na:na]
+	at org.springframework.util.ReflectionUtils.getDeclaredFields(ReflectionUtils.java:752) ~[spring-core-6.1.10.jar:6.1.10]
+	... 27 common frames omitted
+Caused by: java.lang.ClassNotFoundException: com.example.jobapi.service.SaraminCrawlingService
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[na:na]
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188) ~[na:na]
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[na:na]
+	at java.base/java.lang.Class.forName0(Native Method) ~[na:na]
+	at java.base/java.lang.Class.forName(Class.java:467) ~[na:na]
+	at org.springframework.boot.devtools.restart.classloader.RestartClassLoader.loadClass(RestartClassLoader.java:121) ~[spring-boot-devtools-3.3.1.jar:3.3.1]
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[na:na]
+	... 31 common frames omitted
+2024-12-11 01:19:03 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Starting JobApiApplication using Java 17.0.9 with PID 17676 (C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 01:19:03 [restartedMain] DEBUG c.example.jobapi.JobApiApplication - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 01:19:03 [restartedMain] INFO  c.example.jobapi.JobApiApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 01:19:05 [restartedMain] DEBUG c.example.jobapi.security.JWTFilter - Filter 'JWTFilter' configured for use
+2024-12-11 01:19:09 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Started JobApiApplication in 6.179 seconds (process running for 987.169)
+2024-12-11 01:21:14 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Starting JobApiApplication using Java 17.0.9 with PID 32048 (C:\Users\swh01\IdeaProjects\jobAPI\out\production\classes started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 01:21:14 [restartedMain] DEBUG c.example.jobapi.JobApiApplication - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 01:21:14 [restartedMain] INFO  c.example.jobapi.JobApiApplication - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 01:21:16 [restartedMain] DEBUG c.example.jobapi.security.JWTFilter - Filter 'JWTFilter' configured for use
+2024-12-11 01:21:23 [restartedMain] INFO  c.example.jobapi.JobApiApplication - Started JobApiApplication in 10.297 seconds (process running for 11.732)
+2024-12-11 01:22:20 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Starting JobApiApplicationTests using Java 17.0.9 with PID 12800 (started by swh01 in C:\Users\swh01\IdeaProjects\jobAPI)
+2024-12-11 01:22:20 [Test worker] DEBUG c.e.jobapi.JobApiApplicationTests - Running with Spring Boot v3.3.1, Spring v6.1.10
+2024-12-11 01:22:20 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - No active profile set, falling back to 1 default profile: "default"
+2024-12-11 01:22:32 [Test worker] INFO  c.e.jobapi.JobApiApplicationTests - Started JobApiApplicationTests in 12.17 seconds (process running for 14.939)

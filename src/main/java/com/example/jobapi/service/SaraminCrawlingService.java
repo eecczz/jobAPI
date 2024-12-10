@@ -18,13 +18,17 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class SaraminCrawlingService {
 
     @Autowired
     private JobPostingRepository jobPostingRepository;
+
+    private static final int THREAD_POOL_SIZE = 10; // 병렬 처리 스레드 수
 
     public Page<JobPosting> getFilteredJobPostings(String location, String experience, String salary, String sector, String sortOrder, int page, int size) {
         Specification<JobPosting> spec = Specification.where(
@@ -61,18 +65,20 @@ public class SaraminCrawlingService {
         List<JobPosting> jobPostings = new ArrayList<>();
         String baseUrl = "https://www.saramin.co.kr/zf_user/search/recruit?searchType=search&searchword=";
 
-        for (int page = 1; page <= pages; page++) {
-            int retryCount = 0;
-            boolean success = false;
+        // 병렬 작업용 스레드풀 생성
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-            while (retryCount < 3 && !success) { // 최대 3번 재시도
+        for (int page = 1; page <= pages; page++) {
+            final int currentPage = page;
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
-                    String url = baseUrl + keyword + "&recruitPage=" + page;
-                    System.out.println("Fetching URL: " + url + " (Attempt " + (retryCount + 1) + ")");
+                    String url = baseUrl + keyword + "&recruitPage=" + currentPage;
+                    System.out.println("Fetching URL: " + url);
 
                     Document doc = Jsoup.connect(url)
                             .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-                            .timeout(30000) // 타임아웃 30초로 증가
+                            .timeout(20000) // 타임아웃 20초
                             .get();
 
                     Elements jobListings = doc.select(".item_recruit");
@@ -108,35 +114,33 @@ public class SaraminCrawlingService {
                             jobPosting.setSalary(salary);
                             jobPosting.setUrl(link);
 
-                            if (!jobPostingRepository.existsByUrl(link)) {
-                                jobPostings.add(jobPosting);
+                            synchronized (jobPostings) { // 동기화 처리
+                                if (!jobPostingRepository.existsByUrl(link)) {
+                                    jobPostings.add(jobPosting);
+                                }
                             }
                         } catch (Exception e) {
                             System.out.println("Error parsing job posting: " + e.getMessage());
                         }
                     }
 
-                    System.out.println("Page " + page + " crawled successfully. Found " + jobListings.size() + " jobs.");
-                    success = true; // 크롤링 성공
+                    System.out.println("Page " + currentPage + " crawled successfully. Found " + jobListings.size() + " jobs.");
                 } catch (IOException e) {
-                    retryCount++;
-                    System.out.println("Error fetching page " + page + ": " + e.getMessage() + ". Retrying...");
+                    System.out.println("Error fetching page " + currentPage + ": " + e.getMessage());
                 }
-            }
+            }, executor);
 
-            if (!success) {
-                System.out.println("Failed to fetch page " + page + " after 3 attempts. Skipping...");
-            }
-
-            try {
-                TimeUnit.SECONDS.sleep(5); // 요청 간 대기 시간 증가
-            } catch (InterruptedException e) {
-                System.out.println("Sleep interrupted: " + e.getMessage());
-            }
+            futures.add(future);
         }
 
+        // 모든 병렬 작업 완료 대기
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 스레드풀 종료
+        executor.shutdown();
+
+        // 결과 저장
         jobPostingRepository.saveAll(jobPostings);
         System.out.println("총 " + jobPostings.size() + "개의 채용공고가 저장되었습니다.");
     }
 }
-
