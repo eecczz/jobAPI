@@ -109,7 +109,7 @@ public class SaraminCrawlingService {
                         jobPosting.setExperience(experience);
                         jobPosting.setEducation(education);
                         jobPosting.setEmploymentType(employmentType);
-                        jobPosting.setDeadline(deadline);
+                        jobPosting.setClosingDate(deadline);
                         jobPosting.setSector(sector);
                         jobPosting.setSalary(salary);
                         jobPosting.setUrl(link);
