@@ -10,16 +10,15 @@ import com.example.jobapi.exception.UnauthorizedException;
 import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.JobPostingRepository;
 import com.example.jobapi.repository.MemberRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/applications")
 public class ApplicationsController {
 
@@ -30,9 +29,22 @@ public class ApplicationsController {
     @Autowired
     private AppListRepository appListRepository;
 
-    // 지원 등록
+    /**
+     * 지원 등록
+     */
+    @Operation(summary = "채용 공고 지원하기", description = "특정 채용 공고에 지원을 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "지원이 성공적으로 등록되었습니다."),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
+            @ApiResponse(responseCode = "403", description = "이미 지원한 공고입니다."),
+            @ApiResponse(responseCode = "404", description = "해당 공고를 찾을 수 없습니다.")
+    })
     @PostMapping("/{id}")
-    public String applyForJob(@PathVariable("id") Long jobId, HttpSession session) {
+    public String applyForJob(
+            @Parameter(description = "지원할 채용 공고의 ID", required = true)
+            @PathVariable("id") Long jobId,
+            HttpSession session) {
+
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
@@ -64,9 +76,22 @@ public class ApplicationsController {
         return "redirect:/jobs";
     }
 
-    // 지원 취소 처리
+    /**
+     * 지원 취소 처리
+     */
+    @Operation(summary = "지원 취소", description = "등록된 지원 내역을 취소합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "지원이 성공적으로 취소되었습니다."),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
+            @ApiResponse(responseCode = "403", description = "지원 취소 권한이 없습니다."),
+            @ApiResponse(responseCode = "404", description = "해당 지원 내역을 찾을 수 없습니다.")
+    })
     @DeleteMapping("/{id}")
-    public String cancelApply(@PathVariable("id") Long id, HttpSession session) {
+    public String cancelApply(
+            @Parameter(description = "취소할 지원 내역의 ID", required = true)
+            @PathVariable("id") Long id,
+            HttpSession session) {
+
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 

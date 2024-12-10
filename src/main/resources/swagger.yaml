@@ -121,7 +121,7 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                username:
                   type: string
                   description: 새로운 이메일 주소
                 password:

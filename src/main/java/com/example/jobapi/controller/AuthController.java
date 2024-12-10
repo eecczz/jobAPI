@@ -12,19 +12,21 @@ import com.example.jobapi.repository.AppListRepository;
 import com.example.jobapi.repository.MemberRepository;
 import com.example.jobapi.repository.SaveListRepository;
 import com.example.jobapi.util.JWTUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-@Controller
+@RestController
 @RequestMapping("/auth")
 public class AuthController {
 
@@ -44,9 +46,15 @@ public class AuthController {
         this.memberRepository = memberRepository;
     }
 
+    @Operation(summary = "회원가입", description = "새로운 사용자 계정을 생성합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 이메일 형식 또는 중복된 사용자 이름")
+    })
     @PostMapping("/register")
-    @ResponseBody
-    public ResponseEntity<?> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<?> signup(
+            @Parameter(description = "회원가입 요청 데이터", required = true)
+            @RequestBody SignupRequest signupRequest) {
         String username = signupRequest.getUsername();
 
         // 이메일 형식 검증
@@ -61,16 +69,19 @@ public class AuthController {
 
         // 회원가입 처리
         Member member = new Member();
-        member.setUsername(username); // 사용자명 설정
-        member.setPassword(passwordEncoder.encode(signupRequest.getPassword())); // 비밀번호 암호화
+        member.setUsername(username);
+        member.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         memberRepository.save(member);
 
         return ResponseEntity.ok("Signup successful");
     }
 
-    // 회원 이력 페이지
+    @Operation(summary = "사용자 프로필 조회", description = "사용자의 세부 정보, 지원 내역, 관심 공고 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프로필 정보 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다.")
+    })
     @GetMapping("/profile")
-    @ResponseBody
     public ResponseEntity<Map<String, Object>> memberHistory(HttpSession session) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
@@ -82,17 +93,24 @@ public class AuthController {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        // 반환할 데이터를 Map에 담음
         Map<String, Object> response = new HashMap<>();
         response.put("member", member);
         response.put("saveList", saveListRepository.findByMember(member));
         response.put("appList", appListRepository.findByMember(member));
 
-        return ResponseEntity.ok(response); // JSON 형식으로 응답 반환
+        return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "사용자 프로필 수정", description = "사용자의 이메일 또는 비밀번호를 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프로필 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 이메일 형식 또는 비밀번호가 비어 있음"),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다.")
+    })
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestBody Map<String, String> updates, HttpSession session) {
+    public ResponseEntity<?> updateProfile(
+            @Parameter(description = "프로필 수정 요청 데이터", required = true)
+            @RequestBody Map<String, String> updates, HttpSession session) {
         String username = (String) session.getAttribute("username");
         if (username == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
@@ -103,7 +121,6 @@ public class AuthController {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        // 이메일 변경
         if (updates.containsKey("email")) {
             String newEmail = updates.get("email");
             if (!Pattern.matches(EMAIL_REGEX, newEmail)) {
@@ -115,7 +132,6 @@ public class AuthController {
             member.setUsername(newEmail);
         }
 
-        // 비밀번호 변경
         if (updates.containsKey("password")) {
             String newPassword = updates.get("password");
             if (newPassword.isEmpty()) {
@@ -132,9 +148,15 @@ public class AuthController {
         ));
     }
 
+    @Operation(summary = "로그인", description = "사용자가 로그인하고 JWT 토큰을 반환받습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "401", description = "잘못된 사용자 이름 또는 비밀번호")
+    })
     @PostMapping("/login")
-    @ResponseBody
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpSession session) {
+    public ResponseEntity<?> login(
+            @Parameter(description = "로그인 요청 데이터", required = true)
+            @RequestBody LoginRequest loginRequest, HttpSession session) {
         Member member = memberRepository.findByUsername(loginRequest.getUsername());
         if (member == null) {
             throw new NotFoundException("사용자를 찾을 수 없습니다.");
@@ -146,21 +168,26 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(member.getUsername());
 
-        // 세션에 사용자 정보 저장
         session.setAttribute("username", member.getUsername());
         session.setAttribute("loggedIn", true);
 
-        return ResponseEntity.ok()
-                .body(Map.of(
-                        "message", "Login successful",
-                        "redirectUrl", "/demo/list",
-                        "token", token
-                ));
+        return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "redirectUrl", "/demo/list",
+                "token", token
+        ));
     }
 
+    @Operation(summary = "토큰 갱신", description = "Refresh 토큰을 검증하고 새로운 Access 토큰을 발급합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "토큰 갱신 성공"),
+            @ApiResponse(responseCode = "401", description = "잘못된 리프레시 토큰")
+    })
     @PostMapping("/refresh")
-    public ResponseEntity<?> refreshAccessToken(@RequestBody RefreshTokenRequest request) {
-        String refreshToken = request.getRefreshToken().trim(); // 토큰 값 추출
+    public ResponseEntity<?> refreshAccessToken(
+            @Parameter(description = "Refresh 토큰 요청 데이터", required = true)
+            @RequestBody RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken().trim();
         try {
             String username = jwtUtil.extractUsername(refreshToken);
 
@@ -173,14 +200,9 @@ public class AuthController {
                 throw new NotFoundException("사용자를 찾을 수 없습니다.");
             }
 
-            // 새로운 액세스 토큰 생성 (필요시)
-            // String newAccessToken = jwtUtil.generateToken(username);
-
             return ResponseEntity.ok("Token refreshed successfully");
         } catch (Exception e) {
-            e.printStackTrace();
             throw new UnauthorizedException("토큰 갱신에 실패했습니다.");
         }
     }
-
 }

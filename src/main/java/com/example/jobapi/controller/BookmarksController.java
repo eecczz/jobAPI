@@ -4,35 +4,44 @@ import com.example.jobapi.entity.JobPosting;
 import com.example.jobapi.entity.Member;
 import com.example.jobapi.entity.SaveList;
 import com.example.jobapi.exception.ForbiddenException;
-import com.example.jobapi.exception.InvalidRequestException;
 import com.example.jobapi.exception.NotFoundException;
 import com.example.jobapi.exception.UnauthorizedException;
 import com.example.jobapi.repository.JobPostingRepository;
 import com.example.jobapi.repository.MemberRepository;
 import com.example.jobapi.repository.SaveListRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/bookmarks")
 public class BookmarksController {
 
     @Autowired
     private JobPostingRepository jobPostingRepository;
+
     @Autowired
     private MemberRepository memberRepository;
+
     @Autowired
     private SaveListRepository saveListRepository;
 
-    // 관심 등록
+    @Operation(summary = "관심 등록", description = "특정 채용 공고를 관심 목록에 추가합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관심 등록 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
+            @ApiResponse(responseCode = "403", description = "이미 관심 등록된 공고입니다."),
+            @ApiResponse(responseCode = "404", description = "해당 채용 공고를 찾을 수 없습니다.")
+    })
     @PostMapping("/{id}")
-    public String saveJobPosting(@PathVariable("id") Long jobId, HttpSession session) {
+    public ResponseEntity<?> saveJobPosting(
+            @Parameter(description = "관심 등록할 채용 공고의 ID", required = true)
+            @PathVariable("id") Long jobId, HttpSession session) {
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
@@ -61,12 +70,20 @@ public class BookmarksController {
         saveList.setJobPosting(jobPosting);
         saveListRepository.save(saveList);
 
-        return "redirect:/jobs";
+        return ResponseEntity.ok("관심 공고가 성공적으로 등록되었습니다.");
     }
 
-    // 관심 저장 취소 처리
+    @Operation(summary = "관심 등록 취소", description = "특정 채용 공고를 관심 목록에서 제거합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "관심 등록 취소 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인이 필요합니다."),
+            @ApiResponse(responseCode = "403", description = "취소 권한이 없습니다."),
+            @ApiResponse(responseCode = "404", description = "해당 관심 등록 내역을 찾을 수 없습니다.")
+    })
     @DeleteMapping("/{id}")
-    public String cancelSave(@PathVariable("id") Long id, HttpSession session) {
+    public ResponseEntity<?> cancelSave(
+            @Parameter(description = "관심 등록을 취소할 ID", required = true)
+            @PathVariable("id") Long id, HttpSession session) {
         String username = (String) session.getAttribute("username");
         Boolean loggedIn = (Boolean) session.getAttribute("loggedIn");
 
@@ -84,6 +101,6 @@ public class BookmarksController {
         }
 
         saveListRepository.delete(saveList);
-        return "redirect:/auth/profile";
+        return ResponseEntity.ok("관심 등록이 성공적으로 취소되었습니다.");
     }
 }

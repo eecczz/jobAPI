@@ -10,6 +10,10 @@ import com.example.jobapi.repository.JobPostingRepository;
 import com.example.jobapi.repository.MemberRepository;
 import com.example.jobapi.service.SaraminCrawlingService;
 import com.example.jobapi.specification.JobPostingSpecification;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,26 +22,23 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Controller
+@RestController
 @RequestMapping("/jobs")
 public class JobPostingController {
 
     @Autowired
     private JobPostingRepository jobPostingRepository;
+
     @Autowired
     private SaraminCrawlingService crawlingService;
+
     @Autowired
     private MemberRepository memberRepository;
 
@@ -55,12 +56,24 @@ public class JobPostingController {
         return member;
     }
 
+    @Operation(summary = "사람인 크롤링", description = "사람인에서 특정 키워드로 공고를 크롤링합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "크롤링 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @PostMapping("/crawl")
-    public String crawlSaramin(@RequestParam String keyword, @RequestParam int pages) {
+    public ResponseEntity<String> crawlSaramin(
+            @Parameter(description = "크롤링할 키워드", required = true) @RequestParam String keyword,
+            @Parameter(description = "크롤링할 페이지 수", required = true) @RequestParam int pages) {
         crawlingService.crawlSaramin(keyword, pages);
-        return "Crawling completed for keyword: " + keyword;
+        return ResponseEntity.ok("Crawling completed for keyword: " + keyword);
     }
 
+    @Operation(summary = "채용 공고 목록 조회", description = "필터 조건과 검색어를 바탕으로 채용 공고 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 파라미터")
+    })
     @GetMapping
     public ResponseEntity<Map<String, Object>> listJobPostings(
             @RequestParam(value = "keyword", required = false) String keyword,
@@ -71,8 +84,7 @@ public class JobPostingController {
             @RequestParam(value = "experience", required = false) String experience,
             @RequestParam(value = "salary", required = false) String salary,
             @RequestParam(value = "sortOrder", required = false) String sortOrder,
-            @RequestParam(value = "pagenum", defaultValue = "0") int pagenum
-    ) {
+            @RequestParam(value = "pagenum", defaultValue = "0") int pagenum) {
         Specification<JobPosting> spec = Specification.where(
                         JobPostingSpecification.hasKeyword(keyword))
                 .and(JobPostingSpecification.hasCompany(company))
@@ -114,8 +126,15 @@ public class JobPostingController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "채용 공고 상세 조회", description = "특정 채용 공고의 상세 정보를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 공고를 찾을 수 없음")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> readJobPosting(@PathVariable("id") Long id, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> readJobPosting(
+            @Parameter(description = "조회할 채용 공고의 ID", required = true) @PathVariable("id") Long id,
+            HttpSession session) {
         JobPosting jobPosting = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Job posting not found"));
 
@@ -132,8 +151,17 @@ public class JobPostingController {
 
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "채용 공고 수정", description = "특정 채용 공고를 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "403", description = "수정 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "해당 공고를 찾을 수 없음")
+    })
     @PutMapping("/{id}")
-    public String modifyJobPosting(@PathVariable("id") Long id, @ModelAttribute JobPosting jobPosting, HttpSession session) {
+    public ResponseEntity<String> modifyJobPosting(
+            @Parameter(description = "수정할 채용 공고의 ID", required = true) @PathVariable("id") Long id,
+            @RequestBody JobPosting jobPosting, HttpSession session) {
         Member loggedInMember = getLoginMember(session);
 
         jobPostingRepository.findById(id).ifPresentOrElse(existingJobPosting -> {
@@ -151,11 +179,19 @@ public class JobPostingController {
             throw new NotFoundException("Job posting not found");
         });
 
-        return "redirect:/jobs";
+        return ResponseEntity.ok("Job posting updated successfully.");
     }
 
+    @Operation(summary = "채용 공고 삭제", description = "특정 채용 공고를 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "삭제 권한 없음"),
+            @ApiResponse(responseCode = "404", description = "해당 공고를 찾을 수 없음")
+    })
     @DeleteMapping("/{id}")
-    public String deleteJobPosting(@PathVariable("id") Long id, HttpSession session) {
+    public ResponseEntity<String> deleteJobPosting(
+            @Parameter(description = "삭제할 채용 공고의 ID", required = true) @PathVariable("id") Long id,
+            HttpSession session) {
         Member loggedInMember = getLoginMember(session);
 
         JobPosting jobPosting = jobPostingRepository.findById(id)
@@ -166,21 +202,24 @@ public class JobPostingController {
         }
 
         jobPostingRepository.delete(jobPosting);
-        return "redirect:/jobs";
+        return ResponseEntity.ok("Job posting deleted successfully.");
     }
 
+    @Operation(summary = "회원별 채용 데이터 조회", description = "모든 회원의 지원 내역과 관심 공고를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "500", description = "서버 에러")
+    })
     @GetMapping("/data")
     public ResponseEntity<?> getAllMembersJobData() {
         try {
-            // 모든 회원 목록 조회
             List<Member> members = memberRepository.findAll();
 
-            // 회원별 지원 목록과 관심 등록 목록 매핑
             List<Map<String, Object>> result = members.stream().map(member -> {
                 Map<String, Object> memberData = new HashMap<>();
                 memberData.put("username", member.getUsername());
-                memberData.put("appliedJobs", member.getAppLists()); // 지원 목록
-                memberData.put("likedJobs", member.getSaveLists());     // 관심 등록 목록
+                memberData.put("appliedJobs", member.getAppLists());
+                memberData.put("likedJobs", member.getSaveLists());
                 return memberData;
             }).collect(Collectors.toList());
 
@@ -192,4 +231,3 @@ public class JobPostingController {
         }
     }
 }
-

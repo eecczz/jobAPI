@@ -34,6 +34,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
 
 
+
     // 로깅 의존성 (Logback은 Spring Boot 기본 제공, 추가 확장 가능)
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'ch.qos.logback:logback-classic:1.4.11'
