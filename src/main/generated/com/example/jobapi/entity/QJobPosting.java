@@ -30,8 +30,6 @@ public class QJobPosting extends EntityPathBase<JobPosting> {
 
     public final StringPath company = createString("company");
 
-    public final StringPath deadline = createString("deadline");
-
     public final StringPath education = createString("education");
 
     public final StringPath employmentType = createString("employmentType");
