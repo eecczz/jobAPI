@@ -75,12 +75,18 @@ xshell에서 세션을 추가하여,
 
 #### 2. 프로젝트 디렉토리 이동
 ```bash
+mkdir Projects
 cd Projects
 ```
 
-#### 3. MariaDB 설치 및 설정
-1. MariaDB를 설치합니다.
+
+#### 3. JDK & MariaDB 설치 및 설정
+1. JDK & MariaDB를 설치합니다.
    ```bash
+   
+   sudo apt update
+   sudo apt install openjdk-17-jdk
+
    sudo apt update
    sudo apt install mariadb-server
    ```
